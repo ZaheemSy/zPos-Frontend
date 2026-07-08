@@ -5,7 +5,9 @@ import Products from './pages/admin/Products';
 import Inventory from './pages/admin/Inventory';
 import Suppliers from './pages/admin/Suppliers';
 import PurchaseOrders from './pages/admin/PurchaseOrders';
+import Coupons from './pages/admin/Coupons';
 import BillingScreen from './pages/cashier/BillingScreen';
+import Customers from './pages/Customers';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -21,10 +23,13 @@ function App() {
           <Route path="/admin/inventory" element={<Inventory />} />
           <Route path="/admin/suppliers" element={<Suppliers />} />
           <Route path="/admin/purchase-orders" element={<PurchaseOrders />} />
+          <Route path="/admin/coupons" element={<Coupons />} />
+          <Route path="/admin/customers" element={<Customers />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={['cashier']} />}>
           <Route path="/cashier" element={<BillingScreen />} />
+          <Route path="/cashier/customers" element={<Customers />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/login" replace />} />
