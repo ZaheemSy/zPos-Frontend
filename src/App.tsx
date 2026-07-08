@@ -1,22 +1,28 @@
-import { useEffect, useState } from 'react';
-import { apiClient } from './api/client';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import Login from './pages/Login';
+import Dashboard from './pages/admin/Dashboard';
+import BillingScreen from './pages/cashier/BillingScreen';
+import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
 function App() {
-  const [backendStatus, setBackendStatus] = useState<'checking' | 'ok' | 'down'>('checking');
-
-  useEffect(() => {
-    apiClient
-      .get('/health')
-      .then(() => setBackendStatus('ok'))
-      .catch(() => setBackendStatus('down'));
-  }, []);
-
   return (
-    <section id="center">
-      <h1>zPos</h1>
-      <p>Backend status: {backendStatus}</p>
-    </section>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+
+        <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+          <Route path="/admin" element={<Dashboard />} />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['cashier']} />}>
+          <Route path="/cashier" element={<BillingScreen />} />
+        </Route>
+
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
