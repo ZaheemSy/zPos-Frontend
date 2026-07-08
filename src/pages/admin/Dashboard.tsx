@@ -20,6 +20,8 @@ export default function Dashboard() {
       <nav style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
         <Link to="/admin/products">Products</Link>
         <Link to="/admin/inventory">Inventory</Link>
+        <Link to="/admin/suppliers">Suppliers</Link>
+        <Link to="/admin/purchase-orders">Purchase Orders</Link>
       </nav>
       <button onClick={handleLogout}>Logout</button>
     </section>

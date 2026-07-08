@@ -3,6 +3,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/admin/Dashboard';
 import Products from './pages/admin/Products';
 import Inventory from './pages/admin/Inventory';
+import Suppliers from './pages/admin/Suppliers';
+import PurchaseOrders from './pages/admin/PurchaseOrders';
 import BillingScreen from './pages/cashier/BillingScreen';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
@@ -17,6 +19,8 @@ function App() {
           <Route path="/admin" element={<Dashboard />} />
           <Route path="/admin/products" element={<Products />} />
           <Route path="/admin/inventory" element={<Inventory />} />
+          <Route path="/admin/suppliers" element={<Suppliers />} />
+          <Route path="/admin/purchase-orders" element={<PurchaseOrders />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={['cashier']} />}>
