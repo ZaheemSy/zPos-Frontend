@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useReactToPrint } from 'react-to-print';
 import { logout } from '../../api/auth.api';
 import { useAuthStore } from '../../store/auth.store';
 import { useCartStore } from '../../store/cart.store';
@@ -9,8 +10,10 @@ import type { InventoryRow } from '../../api/inventory.api';
 import { listCustomers } from '../../api/customers.api';
 import type { Customer } from '../../api/customers.api';
 import { createSale } from '../../api/sales.api';
-import type { PaymentInput } from '../../api/sales.api';
+import type { PaymentInput, Sale } from '../../api/sales.api';
 import { calculateLineItem } from '../../utils/gst.utils';
+import Invoice from '../../print-templates/Invoice';
+import type { InvoiceFormat } from '../../print-templates/Invoice';
 
 export default function BillingScreen() {
   const navigate = useNavigate();
@@ -32,7 +35,14 @@ export default function BillingScreen() {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastInvoice, setLastInvoice] = useState<string | null>(null);
+  const [lastSale, setLastSale] = useState<Sale | null>(null);
+  const [printFormat, setPrintFormat] = useState<InvoiceFormat>('A4');
+
+  const printRef = useRef<HTMLDivElement>(null);
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: lastSale?.invoiceNumber ?? 'invoice',
+  });
 
   useEffect(() => {
     listInventory().then(setInventory);
@@ -147,7 +157,7 @@ export default function BillingScreen() {
         })),
         payments: buildPayments(),
       });
-      setLastInvoice(sale.invoiceNumber);
+      setLastSale(sale);
       resetAfterSale();
     } catch {
       setError('Failed to complete sale. Check stock levels and payment amounts.');
@@ -370,7 +380,19 @@ export default function BillingScreen() {
             {error}
           </p>
         )}
-        {lastInvoice && <p style={{ color: 'lightgreen' }}>Sale completed: {lastInvoice}</p>}
+        {lastSale && (
+          <div style={{ marginTop: 8 }}>
+            <p style={{ color: 'lightgreen' }}>Sale completed: {lastSale.invoiceNumber}</p>
+            <select value={printFormat} onChange={(e) => setPrintFormat(e.target.value as InvoiceFormat)}>
+              <option value="A4">A4</option>
+              <option value="A3">A3</option>
+              <option value="thermal">Thermal</option>
+            </select>
+            <button type="button" onClick={() => handlePrint()} style={{ marginLeft: 8 }}>
+              Print Invoice
+            </button>
+          </div>
+        )}
 
         <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
           <button type="button" disabled={submitting || cart.items.length === 0} onClick={handleHoldSale}>
@@ -381,6 +403,14 @@ export default function BillingScreen() {
           </button>
         </div>
       </section>
+
+      {lastSale && (
+        <div style={{ maxHeight: 500, overflow: 'auto', border: '1px solid #444' }}>
+          <div ref={printRef}>
+            <Invoice sale={lastSale} format={printFormat} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

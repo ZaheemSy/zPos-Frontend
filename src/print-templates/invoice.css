@@ -1,0 +1,38 @@
+.invoice-a4 {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+}
+
+.invoice-a3 {
+  width: 297mm;
+  min-height: 420mm;
+  margin: 0 auto;
+}
+
+.invoice-thermal {
+  width: 80mm;
+  margin: 0 auto;
+}
+
+.invoice-a4 table,
+.invoice-a3 table,
+.invoice-thermal table {
+  width: 100%;
+}
+
+.invoice-a4 th,
+.invoice-a4 td,
+.invoice-a3 th,
+.invoice-a3 td,
+.invoice-thermal th,
+.invoice-thermal td {
+  padding: 2px 4px;
+  text-align: left;
+}
+
+@media print {
+  @page {
+    margin: 10mm;
+  }
+}
