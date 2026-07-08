@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { logout } from '../../api/auth.api';
 import { useAuthStore } from '../../store/auth.store';
 
@@ -17,6 +17,10 @@ export default function Dashboard() {
     <section style={{ maxWidth: 480, margin: '80px auto' }}>
       <h1>Admin Dashboard</h1>
       <p>Welcome, {user?.name}.</p>
+      <nav style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+        <Link to="/admin/products">Products</Link>
+        <Link to="/admin/inventory">Inventory</Link>
+      </nav>
       <button onClick={handleLogout}>Logout</button>
     </section>
   );

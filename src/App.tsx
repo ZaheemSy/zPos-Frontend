@@ -1,6 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/admin/Dashboard';
+import Products from './pages/admin/Products';
+import Inventory from './pages/admin/Inventory';
 import BillingScreen from './pages/cashier/BillingScreen';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
@@ -13,6 +15,8 @@ function App() {
 
         <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
           <Route path="/admin" element={<Dashboard />} />
+          <Route path="/admin/products" element={<Products />} />
+          <Route path="/admin/inventory" element={<Inventory />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={['cashier']} />}>
