@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/auth.store';
 import { listBranches, updateBranch } from '../api/branches.api';
 import type { Branch } from '../api/branches.api';
 import { listSettings, upsertSetting } from '../api/settings.api';
+import { getErrorMessage } from '../utils/errorMessage';
 
 const PRINTER_TYPES = ['A4', 'A3', 'thermal'];
 
@@ -51,8 +52,8 @@ export default function Settings() {
       await upsertSetting(key, value, scopeToBranch && branchId ? branchId : undefined);
       setSaved(`Saved ${key}`);
       refresh();
-    } catch {
-      setError(`Failed to save ${key}`);
+    } catch (err) {
+      setError(getErrorMessage(err, `Failed to save ${key}`));
     }
   }
 
@@ -75,8 +76,8 @@ export default function Settings() {
         bankBranch: branch.bankBranch ?? undefined,
       });
       setSaved('Branch details saved');
-    } catch {
-      setError('Failed to save branch details');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to save branch details'));
     }
   }
 

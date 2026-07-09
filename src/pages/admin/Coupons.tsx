@@ -3,6 +3,8 @@ import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { createCoupon, listCoupons } from '../../api/coupons.api';
 import type { Coupon } from '../../api/coupons.api';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 function isExpired(coupon: Coupon) {
   return new Date(coupon.validUntil) < new Date();
@@ -50,8 +52,8 @@ export default function Coupons() {
       setValidFrom('');
       setValidUntil('');
       refresh();
-    } catch {
-      setError('Failed to create coupon');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to create coupon'));
     } finally {
       setSubmitting(false);
     }
@@ -137,7 +139,7 @@ export default function Coupons() {
 
       <h2>All coupons</h2>
       {loading ? (
-        <p>Loading...</p>
+        <LoadingSpinner />
       ) : (
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {coupons.map((c) => (

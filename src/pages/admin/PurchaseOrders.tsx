@@ -9,6 +9,8 @@ import { listProducts } from '../../api/products.api';
 import type { Product } from '../../api/products.api';
 import { createPurchaseOrder, listPurchaseOrders, receivePurchaseOrder } from '../../api/purchase-orders.api';
 import type { CreatePurchaseOrderItemInput, PurchaseOrder } from '../../api/purchase-orders.api';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 interface DraftLine {
   productId: string;
@@ -84,8 +86,10 @@ export default function PurchaseOrders() {
       setNotes('');
       setLines([emptyLine()]);
       refreshOrders();
-    } catch {
-      setError('Failed to create purchase order. Check that all lines have a product, quantity, and cost.');
+    } catch (err) {
+      setError(
+        getErrorMessage(err, 'Failed to create purchase order. Check that all lines have a product, quantity, and cost.'),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -110,7 +114,7 @@ export default function PurchaseOrders() {
 
       <form onSubmit={handleCreate} style={{ marginBottom: 32, border: '1px solid #444', padding: 16 }}>
         <h2>Create purchase order</h2>
-        <div style={{ display: 'flex', gap: 16 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
           <label>
             Branch
             <br />
@@ -150,7 +154,7 @@ export default function PurchaseOrders() {
         {lines.map((line, i) => {
           const variants = variantsFor(line.productId);
           return (
-            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+            <div key={i} style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 8 }}>
               <select
                 value={line.productId}
                 onChange={(e) => updateLine(i, 'productId', e.target.value)}
@@ -227,7 +231,7 @@ export default function PurchaseOrders() {
 
       <h2>All purchase orders</h2>
       {loading ? (
-        <p>Loading...</p>
+        <LoadingSpinner />
       ) : (
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {orders.map((po) => (

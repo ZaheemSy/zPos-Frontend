@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { findSalesByInvoiceNumber, processReturn } from '../../api/sales.api';
 import type { Sale } from '../../api/sales.api';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 export default function Returns() {
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -62,9 +63,7 @@ export default function Returns() {
       setQuantities({});
       setReason('');
     } catch (err) {
-      const message =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to process return.';
-      setError(message);
+      setError(getErrorMessage(err, 'Failed to process return.'));
     } finally {
       setSubmitting(false);
     }

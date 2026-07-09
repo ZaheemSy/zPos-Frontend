@@ -6,6 +6,7 @@ import { listProducts } from '../../api/products.api';
 import type { Product } from '../../api/products.api';
 import { listInventory, upsertInventory } from '../../api/inventory.api';
 import type { InventoryRow } from '../../api/inventory.api';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 interface Line {
   productId: string;
@@ -122,8 +123,9 @@ export default function Inventory() {
       </label>
 
       {loading ? (
-        <p>Loading...</p>
+        <LoadingSpinner />
       ) : (
+        <div className="zpos-table-wrap">
         <table style={{ width: '100%', marginTop: 16, borderCollapse: 'collapse' }}>
           <thead>
             <tr>
@@ -187,6 +189,7 @@ export default function Inventory() {
             })}
           </tbody>
         </table>
+        </div>
       )}
     </section>
   );

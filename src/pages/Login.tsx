@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { login } from '../api/auth.api';
 import { useAuthStore } from '../store/auth.store';
+import { getErrorMessage } from '../utils/errorMessage';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -23,11 +23,7 @@ export default function Login() {
       setSession(accessToken, user);
       navigate(user.role === 'admin' ? '/admin' : '/cashier');
     } catch (err) {
-      if (axios.isAxiosError(err) && !err.response) {
-        setError('Cannot reach the server. Is the backend running?');
-      } else {
-        setError('Invalid email or password');
-      }
+      setError(getErrorMessage(err, 'Invalid email or password'));
     } finally {
       setSubmitting(false);
     }

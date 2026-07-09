@@ -17,6 +17,7 @@ import type {
   SalesReport,
   TaxReport,
 } from '../../api/reports.api';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 export default function Reports() {
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -64,7 +65,7 @@ export default function Reports() {
       </p>
       <h1>Reports</h1>
 
-      <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
         <label>
           Branch:{' '}
           <select value={branchId} onChange={(e) => setBranchId(e.target.value)}>
@@ -85,7 +86,7 @@ export default function Reports() {
       </div>
 
       {loading ? (
-        <p>Loading...</p>
+        <LoadingSpinner />
       ) : (
         <>
           {sales && (
@@ -170,6 +171,7 @@ export default function Reports() {
               <p>
                 Total profit: <strong>₹{profit.totalProfit.toFixed(2)}</strong> ({profit.marginPercent}% margin)
               </p>
+              <div className="zpos-table-wrap">
               <table style={{ width: '100%' }}>
                 <thead>
                   <tr>
@@ -194,6 +196,7 @@ export default function Reports() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
 

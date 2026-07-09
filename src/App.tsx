@@ -13,11 +13,13 @@ import Returns from './pages/cashier/Returns';
 import Customers from './pages/Customers';
 import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
+import ConnectivityBanner from './components/ConnectivityBanner';
 import './App.css';
 
 function App() {
   return (
     <BrowserRouter>
+      <ConnectivityBanner />
       <Routes>
         <Route path="/login" element={<Login />} />
 

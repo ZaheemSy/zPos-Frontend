@@ -3,6 +3,8 @@ import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { createSupplier, listSuppliers } from '../../api/suppliers.api';
 import type { Supplier } from '../../api/suppliers.api';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -34,8 +36,8 @@ export default function Suppliers() {
       setPhone('');
       setGstin('');
       refresh();
-    } catch {
-      setError('Failed to create supplier');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to create supplier'));
     } finally {
       setSubmitting(false);
     }
@@ -83,7 +85,7 @@ export default function Suppliers() {
 
       <h2>All suppliers</h2>
       {loading ? (
-        <p>Loading...</p>
+        <LoadingSpinner />
       ) : (
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {suppliers.map((s) => (

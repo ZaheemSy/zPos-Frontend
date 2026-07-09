@@ -3,6 +3,8 @@ import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { addVariant, createProduct, listProducts } from '../../api/products.api';
 import type { Product } from '../../api/products.api';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 const TAX_RATES = [0, 5, 12, 18, 28];
 
@@ -44,8 +46,8 @@ export default function Products() {
       setCessPercent(0);
       setHasVariants(false);
       refresh();
-    } catch {
-      setError('Failed to create product');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to create product'));
     } finally {
       setSubmitting(false);
     }
@@ -133,7 +135,7 @@ export default function Products() {
 
       <h2>All products</h2>
       {loading ? (
-        <p>Loading...</p>
+        <LoadingSpinner />
       ) : (
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {products.map((p) => (

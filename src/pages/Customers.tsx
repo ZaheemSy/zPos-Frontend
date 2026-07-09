@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { createCustomer, getCustomerHistory, listCustomers } from '../api/customers.api';
 import type { Customer, CustomerHistory } from '../api/customers.api';
 import { useAuthStore } from '../store/auth.store';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { getErrorMessage } from '../utils/errorMessage';
 
 export default function Customers() {
   const role = useAuthStore((s) => s.user?.role);
@@ -45,8 +47,8 @@ export default function Customers() {
       setName('');
       setPhone('');
       refresh(search || undefined);
-    } catch {
-      setError('Failed to create customer');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to create customer'));
     } finally {
       setSubmitting(false);
     }
@@ -107,7 +109,7 @@ export default function Customers() {
 
       <h2>All customers</h2>
       {loading ? (
-        <p>Loading...</p>
+        <LoadingSpinner />
       ) : (
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {customers.map((c) => (

@@ -109,3 +109,23 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+.zpos-flex-responsive {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.zpos-table-wrap {
+  overflow-x: auto;
+}
+
+@media (max-width: 800px) {
+  .zpos-flex-responsive {
+    flex-direction: column;
+  }
+
+  .zpos-flex-responsive > * {
+    width: 100%;
+  }
+}

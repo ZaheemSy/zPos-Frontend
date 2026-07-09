@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listHeldSales, resumeSale } from '../../api/sales.api';
 import type { Sale } from '../../api/sales.api';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 export default function HoldSales() {
   const [sales, setSales] = useState<Sale[]>([]);
@@ -32,8 +34,8 @@ export default function HoldSales() {
       await resumeSale(id, [{ paymentMode, amount: Number(amount) }]);
       setResumingId(null);
       refresh();
-    } catch {
-      setError('Failed to resume sale — check stock is still available.');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to resume sale — check stock is still available.'));
     }
   }
 
@@ -45,7 +47,7 @@ export default function HoldSales() {
       <h1>Held Sales</h1>
 
       {loading ? (
-        <p>Loading...</p>
+        <LoadingSpinner />
       ) : sales.length === 0 ? (
         <p>No held sales.</p>
       ) : (

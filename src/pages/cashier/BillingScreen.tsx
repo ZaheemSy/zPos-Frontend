@@ -15,6 +15,7 @@ import { calculateLineItem } from '../../utils/gst.utils';
 import Invoice from '../../print-templates/Invoice';
 import type { InvoiceFormat } from '../../print-templates/Invoice';
 import { listSettings } from '../../api/settings.api';
+import { getErrorMessage } from '../../utils/errorMessage';
 
 export default function BillingScreen() {
   const navigate = useNavigate();
@@ -171,8 +172,8 @@ export default function BillingScreen() {
       });
       setLastSale(sale);
       resetAfterSale();
-    } catch {
-      setError('Failed to complete sale. Check stock levels and payment amounts.');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to complete sale. Check stock levels and payment amounts.'));
     } finally {
       setSubmitting(false);
     }
@@ -196,15 +197,15 @@ export default function BillingScreen() {
         })),
       });
       resetAfterSale();
-    } catch {
-      setError('Failed to hold sale.');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Failed to hold sale.'));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div style={{ display: 'flex', gap: 24, maxWidth: 1100, margin: '20px auto', alignItems: 'flex-start' }}>
+    <div className="zpos-flex-responsive" style={{ maxWidth: 1100, margin: '20px auto', padding: '0 12px' }}>
       <section style={{ flex: 1 }}>
         <p>
           <Link to="/cashier/customers">Customers</Link> · <Link to="/cashier/held-sales">Held Sales</Link> ·{' '}
