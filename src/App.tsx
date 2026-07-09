@@ -6,6 +6,7 @@ import Inventory from './pages/admin/Inventory';
 import Suppliers from './pages/admin/Suppliers';
 import PurchaseOrders from './pages/admin/PurchaseOrders';
 import Coupons from './pages/admin/Coupons';
+import Reports from './pages/admin/Reports';
 import BillingScreen from './pages/cashier/BillingScreen';
 import HoldSales from './pages/cashier/HoldSales';
 import Returns from './pages/cashier/Returns';
@@ -27,6 +28,7 @@ function App() {
           <Route path="/admin/purchase-orders" element={<PurchaseOrders />} />
           <Route path="/admin/coupons" element={<Coupons />} />
           <Route path="/admin/customers" element={<Customers />} />
+          <Route path="/admin/reports" element={<Reports />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={['cashier']} />}>
