@@ -14,7 +14,8 @@ import Customers from './pages/Customers';
 import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 import ConnectivityBanner from './components/ConnectivityBanner';
-import './App.css';
+import AdminLayout from './components/layout/AdminLayout';
+import CashierLayout from './components/layout/CashierLayout';
 
 function App() {
   return (
@@ -24,23 +25,27 @@ function App() {
         <Route path="/login" element={<Login />} />
 
         <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-          <Route path="/admin" element={<Dashboard />} />
-          <Route path="/admin/products" element={<Products />} />
-          <Route path="/admin/inventory" element={<Inventory />} />
-          <Route path="/admin/suppliers" element={<Suppliers />} />
-          <Route path="/admin/purchase-orders" element={<PurchaseOrders />} />
-          <Route path="/admin/coupons" element={<Coupons />} />
-          <Route path="/admin/customers" element={<Customers />} />
-          <Route path="/admin/reports" element={<Reports />} />
-          <Route path="/admin/settings" element={<Settings />} />
+          <Route element={<AdminLayout />}>
+            <Route path="/admin" element={<Dashboard />} />
+            <Route path="/admin/products" element={<Products />} />
+            <Route path="/admin/inventory" element={<Inventory />} />
+            <Route path="/admin/suppliers" element={<Suppliers />} />
+            <Route path="/admin/purchase-orders" element={<PurchaseOrders />} />
+            <Route path="/admin/coupons" element={<Coupons />} />
+            <Route path="/admin/customers" element={<Customers />} />
+            <Route path="/admin/reports" element={<Reports />} />
+            <Route path="/admin/settings" element={<Settings />} />
+          </Route>
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={['cashier']} />}>
-          <Route path="/cashier" element={<BillingScreen />} />
-          <Route path="/cashier/customers" element={<Customers />} />
-          <Route path="/cashier/held-sales" element={<HoldSales />} />
-          <Route path="/cashier/returns" element={<Returns />} />
-          <Route path="/cashier/settings" element={<Settings />} />
+          <Route element={<CashierLayout />}>
+            <Route path="/cashier" element={<BillingScreen />} />
+            <Route path="/cashier/customers" element={<Customers />} />
+            <Route path="/cashier/held-sales" element={<HoldSales />} />
+            <Route path="/cashier/returns" element={<Returns />} />
+            <Route path="/cashier/settings" element={<Settings />} />
+          </Route>
         </Route>
 
         <Route path="/" element={<Navigate to="/login" replace />} />

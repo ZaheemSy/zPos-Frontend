@@ -1,9 +1,16 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Search, Undo2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { findSalesByInvoiceNumber, processReturn } from '../../api/sales.api';
 import type { Sale } from '../../api/sales.api';
 import { getErrorMessage } from '../../utils/errorMessage';
+import PageHeader from '../../components/ui/PageHeader';
+import Card from '../../components/ui/Card';
+import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
+import Button from '../../components/ui/Button';
+import Badge from '../../components/ui/Badge';
+import { Table, THead, TBody, Tr, Th, Td } from '../../components/ui/Table';
 
 export default function Returns() {
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -70,93 +77,103 @@ export default function Returns() {
   }
 
   return (
-    <section style={{ maxWidth: 640, margin: '40px auto' }}>
-      <p>
-        <Link to="/cashier">&larr; Billing</Link>
-      </p>
-      <h1>Returns</h1>
+    <div>
+      <PageHeader title="Returns" description="Look up an invoice and process a return." />
 
-      <form onSubmit={handleSearch}>
-        <input
-          placeholder="Enter invoice number (e.g. INV9)"
-          value={invoiceNumber}
-          onChange={(e) => setInvoiceNumber(e.target.value)}
-          style={{ width: 260 }}
-          required
-        />
-        <button type="submit" disabled={searching}>
-          {searching ? 'Searching...' : 'Search'}
-        </button>
-      </form>
+      <Card className="mb-6">
+        <form onSubmit={handleSearch} className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={15} />
+            <input
+              placeholder="Enter invoice number (e.g. INV9)"
+              value={invoiceNumber}
+              onChange={(e) => setInvoiceNumber(e.target.value)}
+              required
+              className="w-full rounded-lg border border-surface-400 bg-surface-100 py-2 pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+          </div>
+          <Button type="submit" disabled={searching}>
+            {searching ? 'Searching...' : 'Search'}
+          </Button>
+        </form>
 
-      {notFound && <p style={{ color: 'red' }}>No sale found with that invoice number.</p>}
-      {success && <p style={{ color: 'lightgreen' }}>{success}</p>}
+        {notFound && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-red-400">
+            <AlertCircle size={15} /> No sale found with that invoice number.
+          </div>
+        )}
+        {success && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-emerald-400">
+            <CheckCircle2 size={15} /> {success}
+          </div>
+        )}
+      </Card>
 
       {sale && (
-        <div style={{ marginTop: 16, border: '1px solid #444', padding: 16 }}>
-          <div>
-            Invoice: <strong>{sale.invoiceNumber}</strong> — status: {sale.status} — total: ₹{sale.total}
+        <Card>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="font-medium text-zinc-100">
+                Invoice <span className="text-brand-400">{sale.invoiceNumber}</span>
+              </p>
+              <p className="text-xs text-zinc-500">{sale.customer?.name ?? 'Walk-in'} — total ₹{sale.total}</p>
+            </div>
+            <Badge tone="neutral">{sale.status}</Badge>
           </div>
-          <div>{sale.customer?.name ?? 'Walk-in'}</div>
 
-          <table style={{ width: '100%', marginTop: 12 }}>
-            <thead>
+          <Table>
+            <THead>
               <tr>
-                <th style={{ textAlign: 'left' }}>Item</th>
-                <th>Sold Qty</th>
-                <th>Return Qty</th>
+                <Th>Item</Th>
+                <Th>Sold Qty</Th>
+                <Th>Return Qty</Th>
               </tr>
-            </thead>
-            <tbody>
+            </THead>
+            <TBody>
               {sale.items.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.itemDescription}</td>
-                  <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                  <td style={{ textAlign: 'center' }}>
+                <Tr key={item.id}>
+                  <Td className="font-medium text-zinc-100">{item.itemDescription}</Td>
+                  <Td>{item.quantity}</Td>
+                  <Td>
                     <input
                       type="number"
                       min={0}
                       max={Number(item.quantity)}
-                      style={{ width: 60 }}
                       value={quantities[item.id] ?? '0'}
                       onChange={(e) => setQuantities((q) => ({ ...q, [item.id]: e.target.value }))}
+                      className="w-16 rounded-md border border-surface-400 bg-surface-100 px-2 py-1 text-sm text-zinc-100"
                     />
-                  </td>
-                </tr>
+                  </Td>
+                </Tr>
               ))}
-            </tbody>
-          </table>
+            </TBody>
+          </Table>
 
-          <div style={{ marginTop: 12 }}>
-            <label>
-              Refund method:{' '}
-              <select value={refundMode} onChange={(e) => setRefundMode(e.target.value as typeof refundMode)}>
-                <option value="cash">Cash</option>
-                <option value="upi">UPI</option>
-                <option value="credit_to_account">Credit to account</option>
-              </select>
-            </label>
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <input
-              placeholder="Reason (optional)"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              style={{ width: '100%' }}
-            />
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Select
+              label="Refund method"
+              value={refundMode}
+              onChange={(e) => setRefundMode(e.target.value as typeof refundMode)}
+            >
+              <option value="cash">Cash</option>
+              <option value="upi">UPI</option>
+              <option value="credit_to_account">Credit to account</option>
+            </Select>
+            <Input label="Reason (optional)" value={reason} onChange={(e) => setReason(e.target.value)} />
           </div>
 
           {error && (
-            <p role="alert" style={{ color: 'red' }}>
+            <div role="alert" className="mt-3 flex items-start gap-2 text-sm text-red-400">
+              <AlertCircle size={15} className="mt-0.5 shrink-0" />
               {error}
-            </p>
+            </div>
           )}
 
-          <button type="button" disabled={submitting} onClick={handleSubmitReturn} style={{ marginTop: 12 }}>
+          <Button className="mt-4" disabled={submitting} onClick={handleSubmitReturn} icon={<Undo2 size={16} />}>
             {submitting ? 'Processing...' : 'Process Return'}
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
-    </section>
+    </div>
   );
 }

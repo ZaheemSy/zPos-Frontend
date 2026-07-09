@@ -1,3 +1,4 @@
+import { WifiOff } from 'lucide-react';
 import { useConnectivityStore } from '../utils/connectivity';
 
 export default function ConnectivityBanner() {
@@ -8,17 +9,9 @@ export default function ConnectivityBanner() {
   return (
     <div
       role="alert"
-      style={{
-        background: '#c0392b',
-        color: 'white',
-        textAlign: 'center',
-        padding: '8px 16px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
-        fontSize: 14,
-      }}
+      className="sticky top-0 z-50 flex items-center justify-center gap-2 bg-red-600 px-4 py-2 text-sm font-medium text-white"
     >
+      <WifiOff size={16} />
       No internet connection. Please check your connection and try again.
     </div>
   );

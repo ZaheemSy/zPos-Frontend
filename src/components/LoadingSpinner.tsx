@@ -1,21 +1,8 @@
 export default function LoadingSpinner({ label = 'Loading...' }: { label?: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 16, color: '#888' }}>
-      <span
-        style={{
-          width: 14,
-          height: 14,
-          border: '2px solid #444',
-          borderTopColor: '#4f8ef7',
-          borderRadius: '50%',
-          display: 'inline-block',
-          animation: 'zpos-spin 0.7s linear infinite',
-        }}
-      />
+    <div className="flex items-center gap-2.5 px-1 py-6 text-sm text-zinc-500">
+      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-surface-400 border-t-brand-500" />
       {label}
-      <style>
-        {`@keyframes zpos-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}
-      </style>
     </div>
   );
 }

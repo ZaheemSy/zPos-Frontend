@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Tooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { AlertTriangle, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { listBranches } from '../../api/branches.api';
 import type { Branch } from '../../api/branches.api';
 import {
@@ -18,6 +18,12 @@ import type {
   TaxReport,
 } from '../../api/reports.api';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import PageHeader from '../../components/ui/PageHeader';
+import Card from '../../components/ui/Card';
+import Select from '../../components/ui/Select';
+import Input from '../../components/ui/Input';
+import Badge from '../../components/ui/Badge';
+import { Table, THead, TBody, Tr, Th, Td } from '../../components/ui/Table';
 
 export default function Reports() {
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -59,219 +65,234 @@ export default function Reports() {
   useEffect(refresh, [branchId, from, to]);
 
   return (
-    <section style={{ maxWidth: 900, margin: '40px auto' }}>
-      <p>
-        <Link to="/admin">&larr; Dashboard</Link>
-      </p>
-      <h1>Reports</h1>
-
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
-        <label>
-          Branch:{' '}
-          <select value={branchId} onChange={(e) => setBranchId(e.target.value)}>
-            <option value="">All branches</option>
-            {branches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          From: <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-        </label>
-        <label>
-          To: <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-        </label>
-      </div>
+    <div>
+      <PageHeader
+        title="Reports"
+        description="Sales, tax, profit, and stock — filtered by branch and date range."
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Select value={branchId} onChange={(e) => setBranchId(e.target.value)} className="w-44">
+              <option value="">All branches</option>
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </Select>
+            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-40" />
+            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-40" />
+          </div>
+        }
+      />
 
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <>
+        <div className="flex flex-col gap-6">
           {sales && (
-            <div style={{ marginBottom: 32 }}>
-              <h2>Sales Report</h2>
-              <p>
-                Total revenue: <strong>₹{sales.totalRevenue.toFixed(2)}</strong> across {sales.totalSales} sale(s)
-              </p>
+            <Card>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
+                  <TrendingUp size={18} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-zinc-200">Sales Report</h2>
+                  <p className="text-xs text-zinc-500">
+                    ₹{sales.totalRevenue.toFixed(2)} across {sales.totalSales} sale(s)
+                  </p>
+                </div>
+              </div>
+
               {sales.byDay.length > 0 && (
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={sales.byDay}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="revenue" fill="#4f8ef7" name="Revenue (₹)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#24242e" />
+                    <XAxis dataKey="date" stroke="#71717a" fontSize={12} />
+                    <YAxis stroke="#71717a" fontSize={12} />
+                    <Tooltip
+                      contentStyle={{ background: '#131319', border: '1px solid #24242e', borderRadius: 8, fontSize: 13 }}
+                      labelStyle={{ color: '#e4e4e7' }}
+                    />
+                    <Bar dataKey="revenue" fill="#6366f1" name="Revenue (₹)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
-              <table style={{ width: '100%', marginTop: 8 }}>
-                <thead>
+
+              <Table className="mt-4">
+                <THead>
                   <tr>
-                    <th style={{ textAlign: 'left' }}>Branch</th>
-                    <th>Sales</th>
-                    <th>Revenue</th>
+                    <Th>Branch</Th>
+                    <Th>Sales</Th>
+                    <Th>Revenue</Th>
                   </tr>
-                </thead>
-                <tbody>
+                </THead>
+                <TBody>
                   {sales.byBranch.map((b) => (
-                    <tr key={b.branchId}>
-                      <td>{b.branchName}</td>
-                      <td style={{ textAlign: 'center' }}>{b.count}</td>
-                      <td style={{ textAlign: 'right' }}>₹{b.revenue.toFixed(2)}</td>
-                    </tr>
+                    <Tr key={b.branchId}>
+                      <Td className="font-medium text-zinc-100">{b.branchName}</Td>
+                      <Td>{b.count}</Td>
+                      <Td>₹{b.revenue.toFixed(2)}</Td>
+                    </Tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TBody>
+              </Table>
+            </Card>
           )}
 
           {tax && (
-            <div style={{ marginBottom: 32 }}>
-              <h2>Tax Report</h2>
-              <table>
-                <tbody>
-                  <tr>
-                    <td>Taxable Amount</td>
-                    <td>₹{tax.taxableAmount.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td>CGST</td>
-                    <td>₹{tax.cgstAmount.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td>SGST</td>
-                    <td>₹{tax.sgstAmount.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td>IGST</td>
-                    <td>₹{tax.igstAmount.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td>Cess</td>
-                    <td>₹{tax.cessAmount.toFixed(2)}</td>
-                  </tr>
-                  <tr style={{ fontWeight: 'bold' }}>
-                    <td>Total Tax</td>
-                    <td>₹{tax.totalTax.toFixed(2)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <Card>
+              <h2 className="mb-4 text-sm font-semibold text-zinc-200">Tax Report</h2>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                {[
+                  ['Taxable', tax.taxableAmount],
+                  ['CGST', tax.cgstAmount],
+                  ['SGST', tax.sgstAmount],
+                  ['IGST', tax.igstAmount],
+                  ['Cess', tax.cessAmount],
+                  ['Total Tax', tax.totalTax],
+                ].map(([label, value]) => (
+                  <div key={label as string} className="rounded-lg bg-surface-200 p-3">
+                    <p className="text-xs text-zinc-500">{label}</p>
+                    <p className="mt-1 font-semibold text-zinc-100">₹{(value as number).toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
           )}
 
           {profit && (
-            <div style={{ marginBottom: 32 }}>
-              <h2>Profit Report</h2>
-              <p style={{ fontSize: 12, color: '#888' }}>
-                Based on current cost price per product (sales don't snapshot historical cost).
-              </p>
-              <p>
-                Total profit: <strong>₹{profit.totalProfit.toFixed(2)}</strong> ({profit.marginPercent}% margin)
-              </p>
-              <div className="zpos-table-wrap">
-              <table style={{ width: '100%' }}>
-                <thead>
-                  <tr>
-                    <th style={{ textAlign: 'left' }}>Product</th>
-                    <th>Qty</th>
-                    <th>Revenue</th>
-                    <th>Cost</th>
-                    <th>Profit</th>
-                    <th>Margin</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {profit.byProduct.map((p) => (
-                    <tr key={p.productId}>
-                      <td>{p.productName}</td>
-                      <td style={{ textAlign: 'center' }}>{p.quantity}</td>
-                      <td style={{ textAlign: 'right' }}>₹{p.revenue.toFixed(2)}</td>
-                      <td style={{ textAlign: 'right' }}>₹{p.cost.toFixed(2)}</td>
-                      <td style={{ textAlign: 'right' }}>₹{p.profit.toFixed(2)}</td>
-                      <td style={{ textAlign: 'right' }}>{p.marginPercent}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <Card>
+              <div className="mb-1 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600/15 text-brand-400">
+                  <TrendingUp size={18} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-zinc-200">Profit Report</h2>
+                  <p className="text-xs text-zinc-500">
+                    ₹{profit.totalProfit.toFixed(2)} profit ({profit.marginPercent}% margin)
+                  </p>
+                </div>
               </div>
-            </div>
+              <p className="mb-4 text-xs text-zinc-600">
+                Based on current cost price per product — sales don't snapshot historical cost.
+              </p>
+              <Table>
+                <THead>
+                  <tr>
+                    <Th>Product</Th>
+                    <Th>Qty</Th>
+                    <Th>Revenue</Th>
+                    <Th>Cost</Th>
+                    <Th>Profit</Th>
+                    <Th>Margin</Th>
+                  </tr>
+                </THead>
+                <TBody>
+                  {profit.byProduct.map((p) => (
+                    <Tr key={p.productId}>
+                      <Td className="font-medium text-zinc-100">{p.productName}</Td>
+                      <Td>{p.quantity}</Td>
+                      <Td>₹{p.revenue.toFixed(2)}</Td>
+                      <Td>₹{p.cost.toFixed(2)}</Td>
+                      <Td className="text-emerald-400">₹{p.profit.toFixed(2)}</Td>
+                      <Td>{p.marginPercent}%</Td>
+                    </Tr>
+                  ))}
+                </TBody>
+              </Table>
+            </Card>
           )}
 
           {inventory && (
-            <div style={{ marginBottom: 32 }}>
-              <h2>Stock Report</h2>
-              <p>
-                Stock valuation: <strong>₹{inventory.stockValuation.toFixed(2)}</strong>
-              </p>
+            <Card>
+              <h2 className="mb-1 text-sm font-semibold text-zinc-200">Stock Report</h2>
+              <p className="mb-4 text-xs text-zinc-500">Stock valuation: ₹{inventory.stockValuation.toFixed(2)}</p>
 
-              <h3>Low stock</h3>
-              {inventory.lowStock.length === 0 ? (
-                <p>Nothing below reorder point.</p>
-              ) : (
-                <ul>
-                  {inventory.lowStock.map((r, i) => (
-                    <li key={i} style={{ color: 'red' }}>
-                      {r.productName}: {r.quantity} (reorder at {r.reorderPoint})
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <div>
+                  <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-red-400">
+                    <AlertTriangle size={13} /> Low stock
+                  </p>
+                  {inventory.lowStock.length === 0 ? (
+                    <p className="text-xs text-zinc-600">Nothing below reorder point.</p>
+                  ) : (
+                    <ul className="flex flex-col gap-1.5">
+                      {inventory.lowStock.map((r, i) => (
+                        <li key={i} className="text-xs text-zinc-300">
+                          {r.productName}: <Badge tone="danger">{r.quantity}</Badge>{' '}
+                          <span className="text-zinc-600">reorder at {r.reorderPoint}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
 
-              <h3>Best selling</h3>
-              <ul>
-                {inventory.bestSelling.map((r, i) => (
-                  <li key={i}>
-                    {r.productName}: {r.quantitySold} sold, {r.stockOnHand} on hand
-                  </li>
-                ))}
-              </ul>
+                <div>
+                  <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-400">
+                    <TrendingUp size={13} /> Best selling
+                  </p>
+                  <ul className="flex flex-col gap-1.5">
+                    {inventory.bestSelling.map((r, i) => (
+                      <li key={i} className="text-xs text-zinc-300">
+                        {r.productName}: {r.quantitySold} sold, {r.stockOnHand} on hand
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-              <h3>Slow moving</h3>
-              <ul>
-                {inventory.slowMoving.map((r, i) => (
-                  <li key={i}>
-                    {r.productName}: {r.quantitySold} sold, {r.stockOnHand} on hand
-                  </li>
-                ))}
-              </ul>
-            </div>
+                <div>
+                  <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-amber-400">
+                    <TrendingDown size={13} /> Slow moving
+                  </p>
+                  <ul className="flex flex-col gap-1.5">
+                    {inventory.slowMoving.map((r, i) => (
+                      <li key={i} className="text-xs text-zinc-300">
+                        {r.productName}: {r.quantitySold} sold, {r.stockOnHand} on hand
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </Card>
           )}
 
           {credit && (
-            <div style={{ marginBottom: 32 }}>
-              <h2>Customer Credit Report</h2>
-              <p>
-                Total outstanding: <strong>₹{credit.totalOutstanding.toFixed(2)}</strong>
-              </p>
+            <Card>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/15 text-red-400">
+                  <Wallet size={18} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-zinc-200">Customer Credit Report</h2>
+                  <p className="text-xs text-zinc-500">Outstanding: ₹{credit.totalOutstanding.toFixed(2)}</p>
+                </div>
+              </div>
               {credit.customers.length === 0 ? (
-                <p>No customers with an outstanding balance.</p>
+                <p className="text-sm text-zinc-500">No customers with an outstanding balance.</p>
               ) : (
-                <table style={{ width: '100%' }}>
-                  <thead>
+                <Table>
+                  <THead>
                     <tr>
-                      <th style={{ textAlign: 'left' }}>Customer</th>
-                      <th>Phone</th>
-                      <th>Due</th>
+                      <Th>Customer</Th>
+                      <Th>Phone</Th>
+                      <Th>Due</Th>
                     </tr>
-                  </thead>
-                  <tbody>
+                  </THead>
+                  <TBody>
                     {credit.customers.map((c) => (
-                      <tr key={c.id}>
-                        <td>{c.name}</td>
-                        <td style={{ textAlign: 'center' }}>{c.phone}</td>
-                        <td style={{ textAlign: 'right' }}>₹{c.totalDue.toFixed(2)}</td>
-                      </tr>
+                      <Tr key={c.id}>
+                        <Td className="font-medium text-zinc-100">{c.name}</Td>
+                        <Td>{c.phone}</Td>
+                        <Td className="text-red-400">₹{c.totalDue.toFixed(2)}</Td>
+                      </Tr>
                     ))}
-                  </tbody>
-                </table>
+                  </TBody>
+                </Table>
               )}
-            </div>
+            </Card>
           )}
-        </>
+        </div>
       )}
-    </section>
+    </div>
   );
 }

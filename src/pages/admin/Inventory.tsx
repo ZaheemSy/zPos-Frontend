@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { AlertTriangle } from 'lucide-react';
 import { listBranches } from '../../api/branches.api';
 import type { Branch } from '../../api/branches.api';
 import { listProducts } from '../../api/products.api';
@@ -7,6 +7,10 @@ import type { Product } from '../../api/products.api';
 import { listInventory, upsertInventory } from '../../api/inventory.api';
 import type { InventoryRow } from '../../api/inventory.api';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import PageHeader from '../../components/ui/PageHeader';
+import Select from '../../components/ui/Select';
+import Button from '../../components/ui/Button';
+import { Table, THead, TBody, Tr, Th, Td } from '../../components/ui/Table';
 
 interface Line {
   productId: string;
@@ -104,93 +108,94 @@ export default function Inventory() {
     }
   }
 
-  return (
-    <section style={{ maxWidth: 900, margin: '40px auto' }}>
-      <p>
-        <Link to="/admin">&larr; Dashboard</Link>
-      </p>
-      <h1>Inventory</h1>
+  const cellInput = 'w-20 rounded-md border border-surface-400 bg-surface-100 px-2 py-1 text-sm text-zinc-100';
 
-      <label>
-        Branch:{' '}
-        <select value={branchId} onChange={(e) => setBranchId(e.target.value)}>
-          {branches.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
-        </select>
-      </label>
+  return (
+    <div>
+      <PageHeader
+        title="Inventory"
+        description="Set stock, reorder points, and pricing per branch."
+        actions={
+          <Select value={branchId} onChange={(e) => setBranchId(e.target.value)} className="w-48">
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </Select>
+        }
+      />
 
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <div className="zpos-table-wrap">
-        <table style={{ width: '100%', marginTop: 16, borderCollapse: 'collapse' }}>
-          <thead>
+        <Table>
+          <THead>
             <tr>
-              <th style={{ textAlign: 'left' }}>Product</th>
-              <th>Qty</th>
-              <th>Reorder at</th>
-              <th>Cost price</th>
-              <th>Selling price</th>
-              <th></th>
+              <Th>Product</Th>
+              <Th>Qty</Th>
+              <Th>Reorder at</Th>
+              <Th>Cost price</Th>
+              <Th>Selling price</Th>
+              <Th></Th>
             </tr>
-          </thead>
-          <tbody>
+          </THead>
+          <TBody>
             {lines.map((line) => {
               const key = keyFor(line.productId, line.variantId);
               const draft = draftFor(line);
               const lowStock = Number(draft.quantity) <= Number(draft.reorderPoint);
               return (
-                <tr key={key} style={{ color: lowStock ? 'red' : undefined }}>
-                  <td>
-                    {line.label} ({line.unit})
-                  </td>
-                  <td>
+                <Tr key={key}>
+                  <Td className={lowStock ? 'text-red-400' : undefined}>
+                    <span className="flex items-center gap-1.5">
+                      {lowStock && <AlertTriangle size={13} className="shrink-0" />}
+                      {line.label} <span className="text-zinc-500">({line.unit})</span>
+                    </span>
+                  </Td>
+                  <Td>
                     <input
                       type="number"
-                      style={{ width: 70 }}
+                      className={cellInput}
                       value={draft.quantity}
                       onChange={(e) => updateDraft(line, 'quantity', e.target.value)}
                     />
-                  </td>
-                  <td>
+                  </Td>
+                  <Td>
                     <input
                       type="number"
-                      style={{ width: 70 }}
+                      className={cellInput}
                       value={draft.reorderPoint}
                       onChange={(e) => updateDraft(line, 'reorderPoint', e.target.value)}
                     />
-                  </td>
-                  <td>
+                  </Td>
+                  <Td>
                     <input
                       type="number"
-                      style={{ width: 80 }}
+                      className={cellInput}
                       value={draft.costPrice}
                       onChange={(e) => updateDraft(line, 'costPrice', e.target.value)}
                     />
-                  </td>
-                  <td>
+                  </Td>
+                  <Td>
                     <input
                       type="number"
-                      style={{ width: 80 }}
+                      className={cellInput}
                       value={draft.sellingPrice}
                       onChange={(e) => updateDraft(line, 'sellingPrice', e.target.value)}
                     />
-                  </td>
-                  <td>
-                    <button type="button" disabled={savingKey === key} onClick={() => handleSave(line)}>
+                  </Td>
+                  <Td>
+                    <Button size="sm" variant="secondary" disabled={savingKey === key} onClick={() => handleSave(line)}>
                       {savingKey === key ? 'Saving...' : 'Save'}
-                    </button>
-                  </td>
-                </tr>
+                    </Button>
+                  </Td>
+                </Tr>
               );
             })}
-          </tbody>
-        </table>
-        </div>
+          </TBody>
+        </Table>
       )}
-    </section>
+    </div>
   );
 }

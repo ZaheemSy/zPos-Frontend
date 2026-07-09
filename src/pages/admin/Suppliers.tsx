@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Plus, Truck } from 'lucide-react';
 import { createSupplier, listSuppliers } from '../../api/suppliers.api';
 import type { Supplier } from '../../api/suppliers.api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { getErrorMessage } from '../../utils/errorMessage';
+import PageHeader from '../../components/ui/PageHeader';
+import Card from '../../components/ui/Card';
+import Input from '../../components/ui/Input';
+import Button from '../../components/ui/Button';
+import { Table, THead, TBody, Tr, Th, Td } from '../../components/ui/Table';
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -44,59 +49,55 @@ export default function Suppliers() {
   }
 
   return (
-    <section style={{ maxWidth: 640, margin: '40px auto' }}>
-      <p>
-        <Link to="/admin">&larr; Dashboard</Link>
-      </p>
-      <h1>Suppliers</h1>
+    <div>
+      <PageHeader title="Suppliers" description="Manage your vendor directory." />
 
-      <form onSubmit={handleCreate} style={{ marginBottom: 32, border: '1px solid #444', padding: 16 }}>
-        <h2>Add supplier</h2>
-        <div>
-          <label>
-            Name
-            <br />
-            <input id="supplier-name" value={name} onChange={(e) => setName(e.target.value)} required />
-          </label>
-        </div>
-        <div style={{ marginTop: 8 }}>
-          <label>
-            Phone
-            <br />
-            <input id="supplier-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-          </label>
-        </div>
-        <div style={{ marginTop: 8 }}>
-          <label>
-            GSTIN
-            <br />
-            <input id="supplier-gstin" value={gstin} onChange={(e) => setGstin(e.target.value)} />
-          </label>
-        </div>
-        {error && (
-          <p role="alert" style={{ color: 'red' }}>
-            {error}
-          </p>
-        )}
-        <button type="submit" disabled={submitting} style={{ marginTop: 12 }}>
-          {submitting ? 'Saving...' : 'Add supplier'}
-        </button>
-      </form>
+      <Card className="mb-6">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-200">
+          <Truck size={16} className="text-brand-400" />
+          Add supplier
+        </h2>
+        <form onSubmit={handleCreate} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Input id="supplier-name" label="Name" value={name} onChange={(e) => setName(e.target.value)} required />
+          <Input id="supplier-phone" label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <Input id="supplier-gstin" label="GSTIN" value={gstin} onChange={(e) => setGstin(e.target.value)} />
 
-      <h2>All suppliers</h2>
+          {error && (
+            <p role="alert" className="col-span-full text-sm text-red-400">
+              {error}
+            </p>
+          )}
+
+          <div className="col-span-full">
+            <Button type="submit" disabled={submitting} icon={<Plus size={16} />}>
+              {submitting ? 'Saving...' : 'Add supplier'}
+            </Button>
+          </div>
+        </form>
+      </Card>
+
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {suppliers.map((s) => (
-            <li key={s.id} style={{ border: '1px solid #333', padding: 12, marginBottom: 8 }}>
-              <strong>{s.name}</strong>
-              {s.phone && ` — ${s.phone}`}
-              {s.gstin && ` — GSTIN ${s.gstin}`}
-            </li>
-          ))}
-        </ul>
+        <Table>
+          <THead>
+            <tr>
+              <Th>Name</Th>
+              <Th>Phone</Th>
+              <Th>GSTIN</Th>
+            </tr>
+          </THead>
+          <TBody>
+            {suppliers.map((s) => (
+              <Tr key={s.id}>
+                <Td className="font-medium text-zinc-100">{s.name}</Td>
+                <Td>{s.phone ?? '—'}</Td>
+                <Td>{s.gstin ?? '—'}</Td>
+              </Tr>
+            ))}
+          </TBody>
+        </Table>
       )}
-    </section>
+    </div>
   );
 }

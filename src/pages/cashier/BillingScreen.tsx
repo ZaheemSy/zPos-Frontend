@@ -1,8 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
-import { logout } from '../../api/auth.api';
-import { useAuthStore } from '../../store/auth.store';
+import {
+  Search,
+  X,
+  Plus,
+  Minus,
+  User,
+  UserRound,
+  Banknote,
+  CreditCard,
+  Smartphone,
+  SplitSquareHorizontal,
+  PauseCircle,
+  CheckCircle2,
+  Printer,
+  AlertCircle,
+  PackageSearch,
+} from 'lucide-react';
 import { useCartStore } from '../../store/cart.store';
 import type { CartItem } from '../../store/cart.store';
 import { listInventory } from '../../api/inventory.api';
@@ -16,11 +30,19 @@ import Invoice from '../../print-templates/Invoice';
 import type { InvoiceFormat } from '../../print-templates/Invoice';
 import { listSettings } from '../../api/settings.api';
 import { getErrorMessage } from '../../utils/errorMessage';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
+import Card from '../../components/ui/Card';
+
+const PAYMENT_MODES = [
+  { key: 'cash', label: 'Cash', icon: Banknote },
+  { key: 'card', label: 'Card', icon: CreditCard },
+  { key: 'upi', label: 'UPI', icon: Smartphone },
+  { key: 'split', label: 'Split', icon: SplitSquareHorizontal },
+] as const;
 
 export default function BillingScreen() {
-  const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
-  const clearSession = useAuthStore((s) => s.clearSession);
   const cart = useCartStore();
 
   const [inventory, setInventory] = useState<InventoryRow[]>([]);
@@ -60,12 +82,6 @@ export default function BillingScreen() {
       setDeclarationText(map.declaration_text);
     });
   }, []);
-
-  async function handleLogout() {
-    await logout();
-    clearSession();
-    navigate('/login');
-  }
 
   const searchResults = useMemo(() => {
     if (!productSearch.trim()) return [];
@@ -121,9 +137,7 @@ export default function BillingScreen() {
   const subtotal = round2(taxableAmount + cgstAmount + sgstAmount + igstAmount + cessAmount);
   const total = round2(subtotal - cart.specialDiscount);
 
-  const splitTotal = round2(
-    (Number(splitCash) || 0) + (Number(splitCard) || 0) + (Number(splitUpi) || 0),
-  );
+  const splitTotal = round2((Number(splitCash) || 0) + (Number(splitCard) || 0) + (Number(splitUpi) || 0));
   const amountReceived = paymentMode === 'split' ? splitTotal : Number(amountTendered) || 0;
   const change = round2(amountReceived - total);
 
@@ -205,180 +219,238 @@ export default function BillingScreen() {
   }
 
   return (
-    <div className="zpos-flex-responsive" style={{ maxWidth: 1100, margin: '20px auto', padding: '0 12px' }}>
-      <section style={{ flex: 1 }}>
-        <p>
-          <Link to="/cashier/customers">Customers</Link> · <Link to="/cashier/held-sales">Held Sales</Link> ·{' '}
-          <Link to="/cashier/returns">Returns</Link> · <Link to="/cashier/settings">Settings</Link>
-        </p>
-        <h1>Billing</h1>
-        <p>Welcome, {user?.name}.</p>
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_420px]">
+      {/* Product search */}
+      <div>
+        <div className="relative mb-4">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+          <input
+            id="product-search"
+            autoFocus
+            placeholder="Search products by name..."
+            value={productSearch}
+            onChange={(e) => setProductSearch(e.target.value)}
+            className="w-full rounded-xl border border-surface-400 bg-surface-100 py-3.5 pl-11 pr-4 text-base text-zinc-100 placeholder:text-zinc-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+        </div>
 
-        <input
-          id="product-search"
-          autoFocus
-          placeholder="Search product by name..."
-          value={productSearch}
-          onChange={(e) => setProductSearch(e.target.value)}
-          style={{ width: '100%', fontSize: 18, padding: 8 }}
-        />
+        {productSearch.trim() && searchResults.length === 0 && (
+          <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-surface-400 py-12 text-zinc-500">
+            <PackageSearch size={28} />
+            <p className="text-sm">No products match "{productSearch}"</p>
+          </div>
+        )}
 
-        <ul style={{ listStyle: 'none', padding: 0, marginTop: 8 }}>
-          {searchResults.map((row) => (
-            <li
-              key={`${row.productId}:${row.variantId ?? ''}`}
-              onClick={() => addToCart(row)}
-              style={{ border: '1px solid #333', padding: 8, marginBottom: 4, cursor: 'pointer' }}
-            >
-              {row.product.name}
-              {row.variant ? ` - ${row.variant.name}` : ''} — stock: {row.quantity} — ₹{row.sellingPrice}
-            </li>
-          ))}
-        </ul>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {searchResults.map((row) => {
+            const lowStock = Number(row.quantity) <= 0;
+            return (
+              <button
+                key={`${row.productId}:${row.variantId ?? ''}`}
+                onClick={() => !lowStock && addToCart(row)}
+                disabled={lowStock}
+                className="flex flex-col items-start gap-1 rounded-xl border border-surface-300 bg-surface-100 p-3.5 text-left transition-colors hover:border-brand-500 hover:bg-surface-200 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <p className="font-medium text-zinc-100">
+                  {row.product.name}
+                  {row.variant ? ` - ${row.variant.name}` : ''}
+                </p>
+                <div className="flex w-full items-center justify-between">
+                  <span className={`text-xs ${lowStock ? 'text-red-400' : 'text-zinc-500'}`}>
+                    {lowStock ? 'Out of stock' : `${row.quantity} in stock`}
+                  </span>
+                  <span className="font-semibold text-brand-400">₹{row.sellingPrice}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-        <button onClick={handleLogout} style={{ marginTop: 24 }}>
-          Logout
-        </button>
-      </section>
-
-      <section style={{ flex: 1, border: '1px solid #444', padding: 16 }}>
-        <h2>Cart</h2>
-
-        <div style={{ marginBottom: 12 }}>
+      {/* Cart */}
+      <div className="flex flex-col gap-4">
+        <Card>
           {cart.customerId ? (
-            <div>
-              Customer: <strong>{cart.customerLabel}</strong>{' '}
-              <button type="button" onClick={() => cart.setCustomer(null, null)}>
-                Clear
+            <div className="mb-3 flex items-center justify-between rounded-lg bg-brand-600/10 px-3 py-2 text-sm">
+              <span className="flex items-center gap-2 text-brand-300">
+                <User size={15} />
+                {cart.customerLabel}
+              </span>
+              <button onClick={() => cart.setCustomer(null, null)} className="text-zinc-500 hover:text-zinc-300">
+                <X size={15} />
               </button>
             </div>
           ) : (
-            <div>
-              <input
-                placeholder="Search customer by name/phone (optional)"
+            <div className="relative mb-3">
+              <Input
+                placeholder="Customer name/phone (optional)"
                 value={customerSearch}
                 onChange={(e) => handleCustomerSearch(e.target.value)}
               />
-              {customerResults.map((c) => (
-                <div
-                  key={c.id}
-                  onClick={() => {
-                    cart.setCustomer(c.id, c.name);
-                    setCustomerResults([]);
-                  }}
-                  style={{ cursor: 'pointer', padding: 4 }}
-                >
-                  {c.name} {c.phone && `(${c.phone})`}
+              {customerResults.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-surface-400 bg-surface-200 shadow-xl">
+                  {customerResults.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => {
+                        cart.setCustomer(c.id, c.name);
+                        setCustomerResults([]);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-surface-300"
+                    >
+                      <UserRound size={14} className="text-zinc-500" />
+                      {c.name} {c.phone && <span className="text-zinc-500">({c.phone})</span>}
+                    </button>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           )}
-        </div>
 
-        <label>
-          <input type="checkbox" checked={cart.isIgst} onChange={(e) => cart.setIgst(e.target.checked)} />
-          {' IGST (inter-state sale)'}
-        </label>
-
-        <table style={{ width: '100%', marginTop: 12 }}>
-          <tbody>
-            {cart.items.map((item) => (
-              <tr key={`${item.productId}:${item.variantId ?? ''}`}>
-                <td>{item.name}</td>
-                <td>
-                  <input
-                    type="number"
-                    min={1}
-                    max={item.stockAvailable}
-                    style={{ width: 50 }}
-                    value={item.quantity}
-                    onChange={(e) => cart.updateQuantity(item.productId, item.variantId, Number(e.target.value))}
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    min={0}
-                    placeholder="Discount"
-                    style={{ width: 70 }}
-                    value={item.discountAmount || ''}
-                    onChange={(e) => cart.updateDiscount(item.productId, item.variantId, Number(e.target.value))}
-                  />
-                </td>
-                <td>₹{(item.unitPrice * item.quantity - item.discountAmount).toFixed(2)}</td>
-                <td>
-                  <button type="button" onClick={() => cart.removeItem(item.productId, item.variantId)}>
-                    x
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <div style={{ marginTop: 12, fontSize: 14 }}>
-          <div>Taxable amount: ₹{taxableAmount.toFixed(2)}</div>
-          {cart.isIgst ? <div>IGST: ₹{igstAmount.toFixed(2)}</div> : (
-            <>
-              <div>CGST: ₹{cgstAmount.toFixed(2)}</div>
-              <div>SGST: ₹{sgstAmount.toFixed(2)}</div>
-            </>
-          )}
-          {cessAmount > 0 && <div>Cess: ₹{cessAmount.toFixed(2)}</div>}
-          <div>
-            Special discount:{' '}
+          <label className="flex items-center gap-2 text-sm text-zinc-400">
             <input
-              type="number"
-              min={0}
-              style={{ width: 70 }}
-              value={cart.specialDiscount || ''}
-              onChange={(e) => cart.setSpecialDiscount(Number(e.target.value))}
+              type="checkbox"
+              checked={cart.isIgst}
+              onChange={(e) => cart.setIgst(e.target.checked)}
+              className="h-4 w-4 rounded border-surface-400 bg-surface-100 accent-brand-600"
             />
-          </div>
-          <div style={{ fontWeight: 'bold', fontSize: 18 }}>Total: ₹{total.toFixed(2)}</div>
-        </div>
+            IGST (inter-state sale)
+          </label>
 
-        <div style={{ marginTop: 16 }}>
-          <div>
-            {(['cash', 'card', 'upi', 'split'] as const).map((mode) => (
+          <div className="mt-4 flex max-h-64 flex-col gap-2 overflow-y-auto">
+            {cart.items.length === 0 && (
+              <p className="py-6 text-center text-sm text-zinc-500">Cart is empty — search a product to add it.</p>
+            )}
+            {cart.items.map((item) => (
+              <div key={`${item.productId}:${item.variantId ?? ''}`} className="rounded-lg border border-surface-300 p-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-medium text-zinc-100">{item.name}</p>
+                  <button
+                    onClick={() => cart.removeItem(item.productId, item.variantId)}
+                    className="text-zinc-500 hover:text-red-400"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() =>
+                        cart.updateQuantity(item.productId, item.variantId, Math.max(1, item.quantity - 1))
+                      }
+                      className="flex h-6 w-6 items-center justify-center rounded bg-surface-300 text-zinc-300 hover:bg-surface-400"
+                    >
+                      <Minus size={12} />
+                    </button>
+                    <input
+                      type="number"
+                      min={1}
+                      max={item.stockAvailable}
+                      value={item.quantity}
+                      onChange={(e) => cart.updateQuantity(item.productId, item.variantId, Number(e.target.value))}
+                      className="w-10 rounded border border-surface-400 bg-surface-100 py-0.5 text-center text-sm text-zinc-100"
+                    />
+                    <button
+                      onClick={() =>
+                        cart.updateQuantity(
+                          item.productId,
+                          item.variantId,
+                          Math.min(item.stockAvailable, item.quantity + 1),
+                        )
+                      }
+                      className="flex h-6 w-6 items-center justify-center rounded bg-surface-300 text-zinc-300 hover:bg-surface-400"
+                    >
+                      <Plus size={12} />
+                    </button>
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="Disc."
+                      value={item.discountAmount || ''}
+                      onChange={(e) => cart.updateDiscount(item.productId, item.variantId, Number(e.target.value))}
+                      className="ml-1 w-16 rounded border border-surface-400 bg-surface-100 px-1.5 py-0.5 text-xs text-zinc-100 placeholder:text-zinc-600"
+                    />
+                  </div>
+                  <span className="font-semibold text-zinc-100">
+                    ₹{(item.unitPrice * item.quantity - item.discountAmount).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 space-y-1.5 border-t border-surface-300 pt-3 text-sm">
+            <div className="flex justify-between text-zinc-400">
+              <span>Taxable amount</span>
+              <span>₹{taxableAmount.toFixed(2)}</span>
+            </div>
+            {cart.isIgst ? (
+              <div className="flex justify-between text-zinc-400">
+                <span>IGST</span>
+                <span>₹{igstAmount.toFixed(2)}</span>
+              </div>
+            ) : (
+              <>
+                <div className="flex justify-between text-zinc-400">
+                  <span>CGST</span>
+                  <span>₹{cgstAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-zinc-400">
+                  <span>SGST</span>
+                  <span>₹{sgstAmount.toFixed(2)}</span>
+                </div>
+              </>
+            )}
+            {cessAmount > 0 && (
+              <div className="flex justify-between text-zinc-400">
+                <span>Cess</span>
+                <span>₹{cessAmount.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between text-zinc-400">
+              <span>Special discount</span>
+              <input
+                type="number"
+                min={0}
+                value={cart.specialDiscount || ''}
+                onChange={(e) => cart.setSpecialDiscount(Number(e.target.value))}
+                className="w-20 rounded border border-surface-400 bg-surface-100 px-1.5 py-0.5 text-right text-xs text-zinc-100"
+              />
+            </div>
+            <div className="flex justify-between border-t border-surface-300 pt-2 text-base font-semibold text-white">
+              <span>Total</span>
+              <span>₹{total.toFixed(2)}</span>
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="grid grid-cols-4 gap-2">
+            {PAYMENT_MODES.map(({ key, label, icon: Icon }) => (
               <button
-                key={mode}
-                type="button"
-                onClick={() => setPaymentMode(mode)}
-                style={{ fontWeight: paymentMode === mode ? 'bold' : 'normal', marginRight: 8 }}
+                key={key}
+                onClick={() => setPaymentMode(key)}
+                className={`flex flex-col items-center gap-1 rounded-lg py-2.5 text-xs font-medium transition-colors ${
+                  paymentMode === key
+                    ? 'bg-brand-600 text-white'
+                    : 'bg-surface-200 text-zinc-400 hover:bg-surface-300 hover:text-zinc-200'
+                }`}
               >
-                {mode}
+                <Icon size={16} />
+                {label}
               </button>
             ))}
           </div>
+
           {paymentMode === 'split' ? (
-            <div style={{ marginTop: 8 }}>
-              <input
-                type="number"
-                placeholder="Cash"
-                style={{ width: 80 }}
-                value={splitCash}
-                onChange={(e) => setSplitCash(e.target.value)}
-              />
-              <input
-                type="number"
-                placeholder="Card"
-                style={{ width: 80, marginLeft: 4 }}
-                value={splitCard}
-                onChange={(e) => setSplitCard(e.target.value)}
-              />
-              <input
-                type="number"
-                placeholder="UPI"
-                style={{ width: 80, marginLeft: 4 }}
-                value={splitUpi}
-                onChange={(e) => setSplitUpi(e.target.value)}
-              />
-              <div>Split total: ₹{splitTotal.toFixed(2)}</div>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <Input type="number" placeholder="Cash" value={splitCash} onChange={(e) => setSplitCash(e.target.value)} />
+              <Input type="number" placeholder="Card" value={splitCard} onChange={(e) => setSplitCard(e.target.value)} />
+              <Input type="number" placeholder="UPI" value={splitUpi} onChange={(e) => setSplitUpi(e.target.value)} />
             </div>
           ) : (
-            <div style={{ marginTop: 8 }}>
-              <input
+            <div className="mt-3">
+              <Input
                 type="number"
                 placeholder="Amount tendered"
                 value={amountTendered}
@@ -386,40 +458,60 @@ export default function BillingScreen() {
               />
             </div>
           )}
-          <div>Change: ₹{change > 0 ? change.toFixed(2) : '0.00'}</div>
-        </div>
 
-        {error && (
-          <p role="alert" style={{ color: 'red' }}>
-            {error}
-          </p>
-        )}
-        {lastSale && (
-          <div style={{ marginTop: 8 }}>
-            <p style={{ color: 'lightgreen' }}>Sale completed: {lastSale.invoiceNumber}</p>
-            <select value={printFormat} onChange={(e) => setPrintFormat(e.target.value as InvoiceFormat)}>
-              <option value="A4">A4</option>
-              <option value="A3">A3</option>
-              <option value="thermal">Thermal</option>
-            </select>
-            <button type="button" onClick={() => handlePrint()} style={{ marginLeft: 8 }}>
-              Print Invoice
-            </button>
+          <div className="mt-3 flex justify-between rounded-lg bg-surface-200 px-3 py-2 text-sm">
+            <span className="text-zinc-400">Change due</span>
+            <span className="font-semibold text-emerald-400">₹{change > 0 ? change.toFixed(2) : '0.00'}</span>
           </div>
-        )}
 
-        <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-          <button type="button" disabled={submitting || cart.items.length === 0} onClick={handleHoldSale}>
-            Hold Sale
-          </button>
-          <button type="button" disabled={submitting || cart.items.length === 0} onClick={handleCompleteSale}>
-            {submitting ? 'Processing...' : 'Complete Sale'}
-          </button>
-        </div>
-      </section>
+          {error && (
+            <div role="alert" className="mt-3 flex items-start gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">
+              <AlertCircle size={15} className="mt-0.5 shrink-0" />
+              {error}
+            </div>
+          )}
+
+          {lastSale && (
+            <div className="mt-3 rounded-lg bg-emerald-500/10 p-3">
+              <p className="flex items-center gap-2 text-sm font-medium text-emerald-400">
+                <CheckCircle2 size={16} />
+                Sale completed: {lastSale.invoiceNumber}
+              </p>
+              <div className="mt-2 flex gap-2">
+                <Select value={printFormat} onChange={(e) => setPrintFormat(e.target.value as InvoiceFormat)} className="!py-1.5">
+                  <option value="A4">A4</option>
+                  <option value="A3">A3</option>
+                  <option value="thermal">Thermal</option>
+                </Select>
+                <Button type="button" size="sm" variant="secondary" icon={<Printer size={14} />} onClick={() => handlePrint()}>
+                  Print
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Button
+              variant="secondary"
+              icon={<PauseCircle size={16} />}
+              disabled={submitting || cart.items.length === 0}
+              onClick={handleHoldSale}
+            >
+              Hold
+            </Button>
+            <Button
+              icon={<CheckCircle2 size={16} />}
+              disabled={submitting || cart.items.length === 0}
+              onClick={handleCompleteSale}
+            >
+              {submitting ? 'Processing...' : 'Complete Sale'}
+            </Button>
+          </div>
+        </Card>
+      </div>
 
       {lastSale && (
-        <div style={{ maxHeight: 500, overflow: 'auto', border: '1px solid #444' }}>
+        <div className="max-h-[600px] overflow-auto rounded-xl border border-surface-300 lg:col-span-2">
           <div ref={printRef}>
             <Invoice sale={lastSale} format={printFormat} footerNote={footerNote} declarationText={declarationText} />
           </div>

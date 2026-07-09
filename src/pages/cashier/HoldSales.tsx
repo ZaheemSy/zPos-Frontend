@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { PauseCircle, PlayCircle } from 'lucide-react';
 import { listHeldSales, resumeSale } from '../../api/sales.api';
 import type { Sale } from '../../api/sales.api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { getErrorMessage } from '../../utils/errorMessage';
+import PageHeader from '../../components/ui/PageHeader';
+import Card from '../../components/ui/Card';
+import Select from '../../components/ui/Select';
+import Input from '../../components/ui/Input';
+import Button from '../../components/ui/Button';
 
 export default function HoldSales() {
   const [sales, setSales] = useState<Sale[]>([]);
@@ -40,57 +45,66 @@ export default function HoldSales() {
   }
 
   return (
-    <section style={{ maxWidth: 640, margin: '40px auto' }}>
-      <p>
-        <Link to="/cashier">&larr; Billing</Link>
-      </p>
-      <h1>Held Sales</h1>
+    <div>
+      <PageHeader title="Held Sales" description="Resume a parked cart and take payment." />
 
       {loading ? (
         <LoadingSpinner />
       ) : sales.length === 0 ? (
-        <p>No held sales.</p>
+        <Card className="flex flex-col items-center gap-2 py-12 text-zinc-500">
+          <PauseCircle size={28} />
+          <p className="text-sm">No held sales.</p>
+        </Card>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <div className="flex flex-col gap-3">
           {sales.map((sale) => (
-            <li key={sale.id} style={{ border: '1px solid #333', padding: 12, marginBottom: 8 }}>
-              <div>
-                {sale.customer?.name ?? 'Walk-in'} — {sale.items.length} item(s) — total ₹{sale.total}
+            <Card key={sale.id}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="font-medium text-zinc-100">{sale.customer?.name ?? 'Walk-in'}</p>
+                  <p className="text-xs text-zinc-500">
+                    {sale.items.length} item(s) — total ₹{sale.total}
+                  </p>
+                </div>
+                {resumingId !== sale.id && (
+                  <Button size="sm" icon={<PlayCircle size={14} />} onClick={() => startResume(sale)}>
+                    Resume
+                  </Button>
+                )}
               </div>
-              {resumingId === sale.id ? (
-                <div style={{ marginTop: 8 }}>
-                  <select value={paymentMode} onChange={(e) => setPaymentMode(e.target.value as typeof paymentMode)}>
+
+              {resumingId === sale.id && (
+                <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-surface-300 pt-3">
+                  <Select
+                    label="Payment mode"
+                    value={paymentMode}
+                    onChange={(e) => setPaymentMode(e.target.value as typeof paymentMode)}
+                    className="w-32"
+                  >
                     <option value="cash">Cash</option>
                     <option value="card">Card</option>
                     <option value="upi">UPI</option>
-                  </select>
-                  <input
+                  </Select>
+                  <Input
+                    label="Amount"
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    style={{ width: 100, marginLeft: 8 }}
+                    className="w-32"
                   />
-                  <button type="button" onClick={() => confirmResume(sale.id)} style={{ marginLeft: 8 }}>
+                  <Button size="sm" onClick={() => confirmResume(sale.id)}>
                     Confirm
-                  </button>
-                  <button type="button" onClick={() => setResumingId(null)} style={{ marginLeft: 4 }}>
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setResumingId(null)}>
                     Cancel
-                  </button>
-                  {error && (
-                    <p role="alert" style={{ color: 'red' }}>
-                      {error}
-                    </p>
-                  )}
+                  </Button>
+                  {error && <p className="w-full text-sm text-red-400">{error}</p>}
                 </div>
-              ) : (
-                <button type="button" onClick={() => startResume(sale)} style={{ marginTop: 8 }}>
-                  Resume
-                </button>
               )}
-            </li>
+            </Card>
           ))}
-        </ul>
+        </div>
       )}
-    </section>
+    </div>
   );
 }

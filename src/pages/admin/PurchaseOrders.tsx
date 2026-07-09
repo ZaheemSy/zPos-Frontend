@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Plus, X, ClipboardList, PackageCheck } from 'lucide-react';
 import { listBranches } from '../../api/branches.api';
 import type { Branch } from '../../api/branches.api';
 import { listSuppliers } from '../../api/suppliers.api';
@@ -11,6 +11,12 @@ import { createPurchaseOrder, listPurchaseOrders, receivePurchaseOrder } from '.
 import type { CreatePurchaseOrderItemInput, PurchaseOrder } from '../../api/purchase-orders.api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { getErrorMessage } from '../../utils/errorMessage';
+import PageHeader from '../../components/ui/PageHeader';
+import Card from '../../components/ui/Card';
+import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
+import Button from '../../components/ui/Button';
+import Badge from '../../components/ui/Badge';
 
 interface DraftLine {
   productId: string;
@@ -22,6 +28,13 @@ interface DraftLine {
 function emptyLine(): DraftLine {
   return { productId: '', variantId: '', quantityOrdered: '', costPrice: '' };
 }
+
+const statusTone = {
+  draft: 'neutral',
+  ordered: 'info',
+  received: 'success',
+  cancelled: 'danger',
+} as const;
 
 export default function PurchaseOrders() {
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -105,31 +118,30 @@ export default function PurchaseOrders() {
     }
   }
 
-  return (
-    <section style={{ maxWidth: 900, margin: '40px auto' }}>
-      <p>
-        <Link to="/admin">&larr; Dashboard</Link>
-      </p>
-      <h1>Purchase Orders</h1>
+  const selectClass =
+    'rounded-lg border border-surface-400 bg-surface-100 px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500';
+  const numInputClass =
+    'rounded-lg border border-surface-400 bg-surface-100 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-500';
 
-      <form onSubmit={handleCreate} style={{ marginBottom: 32, border: '1px solid #444', padding: 16 }}>
-        <h2>Create purchase order</h2>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-          <label>
-            Branch
-            <br />
-            <select value={branchId} onChange={(e) => setBranchId(e.target.value)}>
+  return (
+    <div>
+      <PageHeader title="Purchase Orders" description="Order and receive stock from your suppliers." />
+
+      <Card className="mb-6">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-200">
+          <ClipboardList size={16} className="text-brand-400" />
+          Create purchase order
+        </h2>
+        <form onSubmit={handleCreate} className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Select label="Branch" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
               {branches.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
                 </option>
               ))}
-            </select>
-          </label>
-          <label>
-            Supplier
-            <br />
-            <select value={supplierId} onChange={(e) => setSupplierId(e.target.value)} required>
+            </Select>
+            <Select label="Supplier" value={supplierId} onChange={(e) => setSupplierId(e.target.value)} required>
               <option value="" disabled>
                 Select a supplier
               </option>
@@ -138,107 +150,117 @@ export default function PurchaseOrders() {
                   {s.name}
                 </option>
               ))}
-            </select>
-          </label>
-        </div>
+            </Select>
+            <Input label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
 
-        <div style={{ marginTop: 8 }}>
-          <label>
-            Notes
-            <br />
-            <input value={notes} onChange={(e) => setNotes(e.target.value)} />
-          </label>
-        </div>
-
-        <h3 style={{ marginTop: 16 }}>Line items</h3>
-        {lines.map((line, i) => {
-          const variants = variantsFor(line.productId);
-          return (
-            <div key={i} style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-              <select
-                value={line.productId}
-                onChange={(e) => updateLine(i, 'productId', e.target.value)}
-                required
-              >
-                <option value="" disabled>
-                  Select product
-                </option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-              {variants.length > 0 && (
-                <select
-                  value={line.variantId}
-                  onChange={(e) => updateLine(i, 'variantId', e.target.value)}
-                  required
-                >
-                  <option value="" disabled>
-                    Select variant
-                  </option>
-                  {variants.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-              <input
-                type="number"
-                min={0.001}
-                step="0.001"
-                placeholder="Qty"
-                style={{ width: 80 }}
-                value={line.quantityOrdered}
-                onChange={(e) => updateLine(i, 'quantityOrdered', e.target.value)}
-                required
-              />
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                placeholder="Cost price"
-                style={{ width: 100 }}
-                value={line.costPrice}
-                onChange={(e) => updateLine(i, 'costPrice', e.target.value)}
-                required
-              />
-              {lines.length > 1 && (
-                <button type="button" onClick={() => removeLine(i)}>
-                  Remove
-                </button>
-              )}
+          <div>
+            <p className="mb-2 text-xs font-medium text-zinc-400">Line items</p>
+            <div className="flex flex-col gap-2">
+              {lines.map((line, i) => {
+                const variants = variantsFor(line.productId);
+                return (
+                  <div key={i} className="flex flex-wrap items-center gap-2 rounded-lg bg-surface-200/50 p-2">
+                    <select
+                      value={line.productId}
+                      onChange={(e) => updateLine(i, 'productId', e.target.value)}
+                      required
+                      className={selectClass}
+                    >
+                      <option value="" disabled>
+                        Select product
+                      </option>
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                    {variants.length > 0 && (
+                      <select
+                        value={line.variantId}
+                        onChange={(e) => updateLine(i, 'variantId', e.target.value)}
+                        required
+                        className={selectClass}
+                      >
+                        <option value="" disabled>
+                          Select variant
+                        </option>
+                        {variants.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    <input
+                      type="number"
+                      min={0.001}
+                      step="0.001"
+                      placeholder="Qty"
+                      value={line.quantityOrdered}
+                      onChange={(e) => updateLine(i, 'quantityOrdered', e.target.value)}
+                      required
+                      className={`w-20 ${numInputClass}`}
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      placeholder="Cost price"
+                      value={line.costPrice}
+                      onChange={(e) => updateLine(i, 'costPrice', e.target.value)}
+                      required
+                      className={`w-28 ${numInputClass}`}
+                    />
+                    {lines.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeLine(i)}
+                        className="text-zinc-500 hover:text-red-400"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-        <button type="button" onClick={addLine}>
-          + Add line
-        </button>
+            <button
+              type="button"
+              onClick={addLine}
+              className="mt-2 flex items-center gap-1 text-sm text-brand-400 hover:text-brand-300"
+            >
+              <Plus size={14} /> Add line
+            </button>
+          </div>
 
-        {error && (
-          <p role="alert" style={{ color: 'red' }}>
-            {error}
-          </p>
-        )}
-        <div>
-          <button type="submit" disabled={submitting} style={{ marginTop: 12 }}>
-            {submitting ? 'Creating...' : 'Create purchase order'}
-          </button>
-        </div>
-      </form>
+          {error && <p className="text-sm text-red-400">{error}</p>}
 
-      <h2>All purchase orders</h2>
+          <div>
+            <Button type="submit" disabled={submitting} icon={<Plus size={16} />}>
+              {submitting ? 'Creating...' : 'Create purchase order'}
+            </Button>
+          </div>
+        </form>
+      </Card>
+
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <div className="flex flex-col gap-3">
           {orders.map((po) => (
-            <li key={po.id} style={{ border: '1px solid #333', padding: 12, marginBottom: 8 }}>
-              <strong>{po.supplier.name}</strong> — {po.branch.name} — status: <strong>{po.status}</strong>
-              {po.notes && ` — ${po.notes}`}
-              <ul>
+            <Card key={po.id}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="font-medium text-zinc-100">
+                    {po.supplier.name} <span className="text-zinc-500">· {po.branch.name}</span>
+                  </p>
+                  {po.notes && <p className="text-xs text-zinc-500">{po.notes}</p>}
+                </div>
+                <Badge tone={statusTone[po.status]}>{po.status}</Badge>
+              </div>
+              <ul className="mt-3 flex flex-col gap-1 border-t border-surface-300 pt-3 text-sm text-zinc-400">
                 {po.items.map((item) => (
                   <li key={item.id}>
                     {item.product.name}
@@ -248,14 +270,21 @@ export default function PurchaseOrders() {
                 ))}
               </ul>
               {po.status === 'ordered' && (
-                <button type="button" disabled={receivingId === po.id} onClick={() => handleReceive(po.id)}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="mt-3"
+                  icon={<PackageCheck size={14} />}
+                  disabled={receivingId === po.id}
+                  onClick={() => handleReceive(po.id)}
+                >
                   {receivingId === po.id ? 'Receiving...' : 'Mark as received'}
-                </button>
+                </Button>
               )}
-            </li>
+            </Card>
           ))}
-        </ul>
+        </div>
       )}
-    </section>
+    </div>
   );
 }
