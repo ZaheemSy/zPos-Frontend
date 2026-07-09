@@ -32,6 +32,14 @@ export function createCustomer(input: CreateCustomerInput) {
   return apiClient.post<Customer>('/customers', input).then((res) => res.data);
 }
 
+export function updateCustomer(id: string, input: Partial<CreateCustomerInput>) {
+  return apiClient.patch<Customer>(`/customers/${id}`, input).then((res) => res.data);
+}
+
+export function deleteCustomer(id: string) {
+  return apiClient.delete(`/customers/${id}`).then((res) => res.data);
+}
+
 export function getCustomerHistory(id: string) {
   return apiClient.get<CustomerHistory>(`/customers/${id}/history`).then((res) => res.data);
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Plus, PackagePlus } from 'lucide-react';
-import { addVariant, createProduct, listProducts } from '../../api/products.api';
+import { Plus, PackagePlus, Pencil, Trash2, Check, X } from 'lucide-react';
+import { addVariant, createProduct, deleteProduct, listProducts, updateProduct } from '../../api/products.api';
 import type { Product } from '../../api/products.api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { getErrorMessage } from '../../utils/errorMessage';
@@ -29,6 +29,10 @@ export default function Products() {
   const [submitting, setSubmitting] = useState(false);
 
   const [variantDrafts, setVariantDrafts] = useState<Record<string, string>>({});
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState({ name: '', hsnCode: '', unit: '', taxPercent: 0, cessPercent: 0 });
+  const [rowError, setRowError] = useState<string | null>(null);
 
   function refresh() {
     setLoading(true);
@@ -66,6 +70,45 @@ export default function Products() {
     await addVariant(productId, variantName);
     setVariantDrafts((d) => ({ ...d, [productId]: '' }));
     refresh();
+  }
+
+  function startEdit(p: Product) {
+    setEditingId(p.id);
+    setRowError(null);
+    setEditDraft({
+      name: p.name,
+      hsnCode: p.hsnCode,
+      unit: p.unit,
+      taxPercent: Number(p.taxPercent),
+      cessPercent: Number(p.cessPercent),
+    });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setRowError(null);
+  }
+
+  async function saveEdit(id: string) {
+    setRowError(null);
+    try {
+      await updateProduct(id, editDraft);
+      setEditingId(null);
+      refresh();
+    } catch (err) {
+      setRowError(getErrorMessage(err, 'Failed to update product'));
+    }
+  }
+
+  async function handleDelete(id: string, name: string) {
+    if (!window.confirm(`Delete product "${name}"? This can't be undone.`)) return;
+    setRowError(null);
+    try {
+      await deleteProduct(id);
+      refresh();
+    } catch (err) {
+      setRowError(getErrorMessage(err, 'Failed to delete product'));
+    }
   }
 
   return (
@@ -120,6 +163,12 @@ export default function Products() {
         </form>
       </Card>
 
+      {rowError && (
+        <p role="alert" className="mb-3 text-sm text-red-400">
+          {rowError}
+        </p>
+      )}
+
       {loading ? (
         <LoadingSpinner />
       ) : (
@@ -131,10 +180,69 @@ export default function Products() {
               <Th>Unit</Th>
               <Th>Tax</Th>
               <Th>Variants</Th>
+              <Th>Actions</Th>
             </tr>
           </THead>
           <TBody>
-            {products.map((p) => (
+            {products.map((p) =>
+              editingId === p.id ? (
+                <Tr key={p.id}>
+                  <Td>
+                    <input
+                      value={editDraft.name}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, name: e.target.value }))}
+                      className="w-32 rounded-md border border-surface-400 bg-surface-100 px-2 py-1 text-xs text-zinc-100"
+                    />
+                  </Td>
+                  <Td>
+                    <input
+                      value={editDraft.hsnCode}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, hsnCode: e.target.value }))}
+                      className="w-20 rounded-md border border-surface-400 bg-surface-100 px-2 py-1 text-xs text-zinc-100"
+                    />
+                  </Td>
+                  <Td>
+                    <input
+                      value={editDraft.unit}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, unit: e.target.value }))}
+                      className="w-16 rounded-md border border-surface-400 bg-surface-100 px-2 py-1 text-xs text-zinc-100"
+                    />
+                  </Td>
+                  <Td>
+                    <div className="flex gap-1">
+                      <input
+                        type="number"
+                        min={0}
+                        value={editDraft.taxPercent}
+                        onChange={(e) => setEditDraft((d) => ({ ...d, taxPercent: Number(e.target.value) }))}
+                        className="w-16 rounded-md border border-surface-400 bg-surface-100 px-2 py-1 text-xs text-zinc-100"
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={editDraft.cessPercent}
+                        onChange={(e) => setEditDraft((d) => ({ ...d, cessPercent: Number(e.target.value) }))}
+                        className="w-16 rounded-md border border-surface-400 bg-surface-100 px-2 py-1 text-xs text-zinc-100"
+                        placeholder="cess"
+                      />
+                    </div>
+                  </Td>
+                  <Td>
+                    <span className="text-xs text-zinc-600">—</span>
+                  </Td>
+                  <Td>
+                    <div className="flex gap-1.5">
+                      <Button size="sm" onClick={() => saveEdit(p.id)} icon={<Check size={14} />}>
+                        Save
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={cancelEdit} icon={<X size={14} />}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </Td>
+                </Tr>
+              ) : (
               <Tr key={p.id}>
                 <Td className="font-medium text-zinc-100">{p.name}</Td>
                 <Td>{p.hsnCode}</Td>
@@ -175,8 +283,19 @@ export default function Products() {
                     <span className="text-xs text-zinc-600">—</span>
                   )}
                 </Td>
+                <Td>
+                  <div className="flex gap-1.5">
+                    <Button size="sm" variant="secondary" onClick={() => startEdit(p)} icon={<Pencil size={13} />}>
+                      Edit
+                    </Button>
+                    <Button size="sm" variant="danger" onClick={() => handleDelete(p.id, p.name)} icon={<Trash2 size={13} />}>
+                      Delete
+                    </Button>
+                  </div>
+                </Td>
               </Tr>
-            ))}
+              ),
+            )}
           </TBody>
         </Table>
       )}

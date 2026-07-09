@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { FormEvent } from 'react';
-import { Search, Plus, UserPlus, ChevronDown, ChevronRight, Coins } from 'lucide-react';
-import { createCustomer, getCustomerHistory, listCustomers } from '../api/customers.api';
+import type { FormEvent, MouseEvent } from 'react';
+import { Search, Plus, UserPlus, ChevronDown, ChevronRight, Coins, Pencil, Trash2, Check, X } from 'lucide-react';
+import { createCustomer, deleteCustomer, getCustomerHistory, listCustomers, updateCustomer } from '../api/customers.api';
 import type { Customer, CustomerHistory } from '../api/customers.api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { getErrorMessage } from '../utils/errorMessage';
@@ -23,6 +23,10 @@ export default function Customers() {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [history, setHistory] = useState<CustomerHistory | null>(null);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState({ name: '', phone: '' });
+  const [rowError, setRowError] = useState<string | null>(null);
 
   function refresh(query?: string) {
     setLoading(true);
@@ -63,6 +67,47 @@ export default function Customers() {
     }
     setSelectedId(id);
     setHistory(await getCustomerHistory(id));
+  }
+
+  function startEdit(e: MouseEvent, c: Customer) {
+    e.stopPropagation();
+    setEditingId(c.id);
+    setRowError(null);
+    setEditDraft({ name: c.name, phone: c.phone ?? '' });
+  }
+
+  function cancelEdit(e: MouseEvent) {
+    e.stopPropagation();
+    setEditingId(null);
+    setRowError(null);
+  }
+
+  async function saveEdit(e: MouseEvent, id: string) {
+    e.stopPropagation();
+    setRowError(null);
+    try {
+      await updateCustomer(id, { name: editDraft.name, phone: editDraft.phone || undefined });
+      setEditingId(null);
+      refresh(search || undefined);
+    } catch (err) {
+      setRowError(getErrorMessage(err, 'Failed to update customer'));
+    }
+  }
+
+  async function handleDelete(e: MouseEvent, id: string, name: string) {
+    e.stopPropagation();
+    if (!window.confirm(`Delete customer "${name}"? This can't be undone.`)) return;
+    setRowError(null);
+    try {
+      await deleteCustomer(id);
+      if (selectedId === id) {
+        setSelectedId(null);
+        setHistory(null);
+      }
+      refresh(search || undefined);
+    } catch (err) {
+      setRowError(getErrorMessage(err, 'Failed to delete customer'));
+    }
   }
 
   return (
@@ -108,37 +153,80 @@ export default function Customers() {
               <p className="py-6 text-center text-sm text-zinc-500">No customers found.</p>
             ) : (
               <div className="flex flex-col gap-2">
-                {customers.map((c) => (
-                  <div key={c.id} className="rounded-lg border border-surface-300">
-                    <button
-                      onClick={() => handleSelect(c.id)}
-                      className="flex w-full items-center justify-between gap-2 p-3 text-left hover:bg-surface-200/60"
-                    >
-                      <div>
-                        <p className="font-medium text-zinc-100">{c.name}</p>
-                        <p className="text-xs text-zinc-500">{c.phone ?? 'No phone'}</p>
+                {customers.map((c) =>
+                  editingId === c.id ? (
+                    <div key={c.id} className="rounded-lg border border-brand-500/50 bg-surface-200/40 p-3">
+                      <div className="flex flex-wrap items-end gap-2">
+                        <Input
+                          label="Name"
+                          value={editDraft.name}
+                          onChange={(e) => setEditDraft((d) => ({ ...d, name: e.target.value }))}
+                          className="w-40"
+                        />
+                        <Input
+                          label="Phone"
+                          value={editDraft.phone}
+                          onChange={(e) => setEditDraft((d) => ({ ...d, phone: e.target.value }))}
+                          className="w-40"
+                        />
+                        <Button size="sm" onClick={(e) => saveEdit(e, c.id)} icon={<Check size={14} />}>
+                          Save
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={cancelEdit} icon={<X size={14} />}>
+                          Cancel
+                        </Button>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Badge tone="info">
-                          <Coins size={11} className="mr-1 inline" />
-                          {c.loyaltyPoints} pts
-                        </Badge>
-                        {Number(c.totalDue) > 0 && <Badge tone="warning">Due ₹{c.totalDue}</Badge>}
-                        {selectedId === c.id ? (
-                          <ChevronDown size={15} className="text-zinc-500" />
-                        ) : (
-                          <ChevronRight size={15} className="text-zinc-500" />
-                        )}
+                      {rowError && <p className="mt-2 text-sm text-red-400">{rowError}</p>}
+                    </div>
+                  ) : (
+                    <div key={c.id} className="rounded-lg border border-surface-300">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => handleSelect(c.id)}
+                        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleSelect(c.id)}
+                        className="flex w-full cursor-pointer items-center justify-between gap-2 p-3 text-left hover:bg-surface-200/60"
+                      >
+                        <div>
+                          <p className="font-medium text-zinc-100">{c.name}</p>
+                          <p className="text-xs text-zinc-500">{c.phone ?? 'No phone'}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge tone="info">
+                            <Coins size={11} className="mr-1 inline" />
+                            {c.loyaltyPoints} pts
+                          </Badge>
+                          {Number(c.totalDue) > 0 && <Badge tone="warning">Due ₹{c.totalDue}</Badge>}
+                          <button
+                            onClick={(e) => startEdit(e, c)}
+                            className="rounded-md p-1 text-zinc-500 hover:bg-surface-300 hover:text-zinc-200"
+                            aria-label="Edit customer"
+                          >
+                            <Pencil size={13} />
+                          </button>
+                          <button
+                            onClick={(e) => handleDelete(e, c.id, c.name)}
+                            className="rounded-md p-1 text-zinc-500 hover:bg-red-500/15 hover:text-red-400"
+                            aria-label="Delete customer"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                          {selectedId === c.id ? (
+                            <ChevronDown size={15} className="text-zinc-500" />
+                          ) : (
+                            <ChevronRight size={15} className="text-zinc-500" />
+                          )}
+                        </div>
                       </div>
-                    </button>
-                    {selectedId === c.id && history && (
-                      <div className="border-t border-surface-300 bg-surface-200/40 px-3 py-2 text-xs text-zinc-400">
-                        <p>Purchases: {history.sales.length === 0 ? 'none yet' : history.sales.length}</p>
-                        <p>Loyalty transactions: {history.loyaltyTransactions.length}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      {selectedId === c.id && history && (
+                        <div className="border-t border-surface-300 bg-surface-200/40 px-3 py-2 text-xs text-zinc-400">
+                          <p>Purchases: {history.sales.length === 0 ? 'none yet' : history.sales.length}</p>
+                          <p>Loyalty transactions: {history.loyaltyTransactions.length}</p>
+                        </div>
+                      )}
+                    </div>
+                  ),
+                )}
               </div>
             )}
           </div>

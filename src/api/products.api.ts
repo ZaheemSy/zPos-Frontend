@@ -40,6 +40,14 @@ export function createProduct(input: CreateProductInput) {
   return apiClient.post<Product>('/products', input).then((res) => res.data);
 }
 
+export function updateProduct(id: string, input: Partial<CreateProductInput>) {
+  return apiClient.patch<Product>(`/products/${id}`, input).then((res) => res.data);
+}
+
+export function deleteProduct(id: string) {
+  return apiClient.delete(`/products/${id}`).then((res) => res.data);
+}
+
 export function addVariant(productId: string, name: string, sku?: string) {
   return apiClient.post<ProductVariant>(`/products/${productId}/variants`, { name, sku }).then((res) => res.data);
 }
