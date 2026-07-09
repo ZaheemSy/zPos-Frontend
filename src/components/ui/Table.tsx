@@ -3,7 +3,7 @@ import clsx from 'clsx';
 
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="zpos-table-wrap rounded-xl border border-surface-300">
+    <div className="zepos-table-wrap rounded-xl border border-surface-300">
       <table className={clsx('w-full border-collapse text-sm', className)} {...props} />
     </div>
   );

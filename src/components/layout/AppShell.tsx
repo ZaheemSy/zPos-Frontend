@@ -35,9 +35,9 @@ export default function AppShell({ navItems, homePath }: { navItems: NavItem[]; 
     <>
       <div className="flex items-center gap-2 px-3 py-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
-          zP
+          Ze
         </div>
-        <span className="text-lg font-semibold tracking-tight text-white">zPos</span>
+        <span className="text-lg font-semibold tracking-tight text-white">Zepos</span>
       </div>
 
       <nav className="mt-6 flex flex-1 flex-col gap-1">
@@ -82,9 +82,9 @@ export default function AppShell({ navItems, homePath }: { navItems: NavItem[]; 
       <div className="flex items-center justify-between border-b border-surface-300 bg-surface-50 px-4 py-3 md:hidden">
         <NavLink to={homePath} className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-xs font-bold text-white">
-            zP
+            Ze
           </div>
-          <span className="font-semibold text-white">zPos</span>
+          <span className="font-semibold text-white">Zepos</span>
         </NavLink>
         <button onClick={() => setMobileOpen((v) => !v)} className="text-zinc-300">
           {mobileOpen ? <X size={22} /> : <Menu size={22} />}

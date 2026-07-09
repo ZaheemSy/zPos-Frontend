@@ -40,10 +40,10 @@ export default function Login() {
       <div className="relative w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 text-lg font-bold text-white shadow-lg shadow-brand-600/30">
-            zP
+            Ze
           </div>
           <div className="text-center">
-            <h1 className="text-xl font-semibold text-white">Sign in to zPos</h1>
+            <h1 className="text-xl font-semibold text-white">Sign in to Zepos</h1>
             <p className="mt-1 text-sm text-zinc-500">Branch billing &amp; inventory, made simple</p>
           </div>
         </div>

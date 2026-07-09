@@ -26,6 +26,6 @@ export const useAuthStore = create<AuthState>()(
       setSession: (accessToken, user) => set({ accessToken, user }),
       clearSession: () => set({ accessToken: null, user: null }),
     }),
-    { name: 'zpos-auth' },
+    { name: 'zepos-auth' },
   ),
 );
