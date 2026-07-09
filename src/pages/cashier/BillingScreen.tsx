@@ -14,6 +14,7 @@ import type { PaymentInput, Sale } from '../../api/sales.api';
 import { calculateLineItem } from '../../utils/gst.utils';
 import Invoice from '../../print-templates/Invoice';
 import type { InvoiceFormat } from '../../print-templates/Invoice';
+import { listSettings } from '../../api/settings.api';
 
 export default function BillingScreen() {
   const navigate = useNavigate();
@@ -37,6 +38,8 @@ export default function BillingScreen() {
   const [error, setError] = useState<string | null>(null);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
   const [printFormat, setPrintFormat] = useState<InvoiceFormat>('A4');
+  const [footerNote, setFooterNote] = useState<string | undefined>();
+  const [declarationText, setDeclarationText] = useState<string | undefined>();
 
   const printRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
@@ -46,6 +49,15 @@ export default function BillingScreen() {
 
   useEffect(() => {
     listInventory().then(setInventory);
+    listSettings().then((rows) => {
+      const map: Record<string, string> = {};
+      rows.forEach((r) => (map[r.key] = r.value));
+      if (map.printer_type === 'A4' || map.printer_type === 'A3' || map.printer_type === 'thermal') {
+        setPrintFormat(map.printer_type);
+      }
+      setFooterNote(map.footer_note);
+      setDeclarationText(map.declaration_text);
+    });
   }, []);
 
   async function handleLogout() {
@@ -196,7 +208,7 @@ export default function BillingScreen() {
       <section style={{ flex: 1 }}>
         <p>
           <Link to="/cashier/customers">Customers</Link> · <Link to="/cashier/held-sales">Held Sales</Link> ·{' '}
-          <Link to="/cashier/returns">Returns</Link>
+          <Link to="/cashier/returns">Returns</Link> · <Link to="/cashier/settings">Settings</Link>
         </p>
         <h1>Billing</h1>
         <p>Welcome, {user?.name}.</p>
@@ -408,7 +420,7 @@ export default function BillingScreen() {
       {lastSale && (
         <div style={{ maxHeight: 500, overflow: 'auto', border: '1px solid #444' }}>
           <div ref={printRef}>
-            <Invoice sale={lastSale} format={printFormat} />
+            <Invoice sale={lastSale} format={printFormat} footerNote={footerNote} declarationText={declarationText} />
           </div>
         </div>
       )}

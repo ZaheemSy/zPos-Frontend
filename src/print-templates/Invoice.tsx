@@ -12,7 +12,17 @@ function money(value: string | number): string {
   return Number(value).toFixed(2);
 }
 
-export default function Invoice({ sale, format }: { sale: Sale; format: InvoiceFormat }) {
+export default function Invoice({
+  sale,
+  format,
+  footerNote,
+  declarationText,
+}: {
+  sale: Sale;
+  format: InvoiceFormat;
+  footerNote?: string;
+  declarationText?: string;
+}) {
   const isThermal = format === 'thermal';
   const widthClass = format === 'A3' ? 'invoice-a3' : format === 'A4' ? 'invoice-a4' : 'invoice-thermal';
 
@@ -157,7 +167,7 @@ export default function Invoice({ sale, format }: { sale: Sale; format: InvoiceF
             </section>
           )}
 
-          <section style={{ marginTop: 12, fontSize: 11 }}>{DEFAULT_DECLARATION}</section>
+          <section style={{ marginTop: 12, fontSize: 11 }}>{declarationText || DEFAULT_DECLARATION}</section>
 
           <section style={{ marginTop: 24, textAlign: 'right' }}>
             <div>For {sale.tenant.name}</div>
@@ -167,7 +177,7 @@ export default function Invoice({ sale, format }: { sale: Sale; format: InvoiceF
       )}
 
       <footer style={{ marginTop: 16, fontSize: 10, textAlign: 'center', borderTop: '1px solid #ccc', paddingTop: 4 }}>
-        <div>{DEFAULT_FOOTER_NOTE}</div>
+        <div>{footerNote || DEFAULT_FOOTER_NOTE}</div>
         <div>Computer generated invoice</div>
       </footer>
     </div>

@@ -25,6 +25,7 @@ export default function Dashboard() {
         <Link to="/admin/customers">Customers</Link>
         <Link to="/admin/coupons">Coupons</Link>
         <Link to="/admin/reports">Reports</Link>
+        <Link to="/admin/settings">Settings</Link>
       </nav>
       <button onClick={handleLogout}>Logout</button>
     </section>

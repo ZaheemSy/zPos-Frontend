@@ -11,6 +11,7 @@ import BillingScreen from './pages/cashier/BillingScreen';
 import HoldSales from './pages/cashier/HoldSales';
 import Returns from './pages/cashier/Returns';
 import Customers from './pages/Customers';
+import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -29,6 +30,7 @@ function App() {
           <Route path="/admin/coupons" element={<Coupons />} />
           <Route path="/admin/customers" element={<Customers />} />
           <Route path="/admin/reports" element={<Reports />} />
+          <Route path="/admin/settings" element={<Settings />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={['cashier']} />}>
@@ -36,6 +38,7 @@ function App() {
           <Route path="/cashier/customers" element={<Customers />} />
           <Route path="/cashier/held-sales" element={<HoldSales />} />
           <Route path="/cashier/returns" element={<Returns />} />
+          <Route path="/cashier/settings" element={<Settings />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/login" replace />} />
