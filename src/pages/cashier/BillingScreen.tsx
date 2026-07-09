@@ -195,7 +195,8 @@ export default function BillingScreen() {
     <div style={{ display: 'flex', gap: 24, maxWidth: 1100, margin: '20px auto', alignItems: 'flex-start' }}>
       <section style={{ flex: 1 }}>
         <p>
-          <Link to="/cashier/customers">Customers</Link> · <Link to="/cashier/held-sales">Held Sales</Link>
+          <Link to="/cashier/customers">Customers</Link> · <Link to="/cashier/held-sales">Held Sales</Link> ·{' '}
+          <Link to="/cashier/returns">Returns</Link>
         </p>
         <h1>Billing</h1>
         <p>Welcome, {user?.name}.</p>

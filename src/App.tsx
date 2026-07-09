@@ -8,6 +8,7 @@ import PurchaseOrders from './pages/admin/PurchaseOrders';
 import Coupons from './pages/admin/Coupons';
 import BillingScreen from './pages/cashier/BillingScreen';
 import HoldSales from './pages/cashier/HoldSales';
+import Returns from './pages/cashier/Returns';
 import Customers from './pages/Customers';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
@@ -32,6 +33,7 @@ function App() {
           <Route path="/cashier" element={<BillingScreen />} />
           <Route path="/cashier/customers" element={<Customers />} />
           <Route path="/cashier/held-sales" element={<HoldSales />} />
+          <Route path="/cashier/returns" element={<Returns />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/login" replace />} />

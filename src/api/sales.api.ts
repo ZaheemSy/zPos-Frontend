@@ -43,6 +43,7 @@ export interface Sale {
   createdAt: string;
   customer: { name: string; phone: string | null; billingAddress: string | null; gstin: string | null } | null;
   items: Array<{
+    id: string;
     itemDescription: string;
     hsnCode: string;
     unit: string;
@@ -80,4 +81,23 @@ export function listHeldSales() {
 
 export function resumeSale(id: string, payments: PaymentInput[]) {
   return apiClient.post<Sale>(`/sales/${id}/resume`, { payments }).then((res) => res.data);
+}
+
+export function findSalesByInvoiceNumber(invoiceNumber: string) {
+  return apiClient.get<Sale[]>('/sales', { params: { invoiceNumber } }).then((res) => res.data);
+}
+
+export interface ReturnItemInput {
+  saleItemId: string;
+  quantityReturned: number;
+}
+
+export interface ProcessReturnInput {
+  reason?: string;
+  refundMode: 'cash' | 'upi' | 'credit_to_account';
+  items: ReturnItemInput[];
+}
+
+export function processReturn(saleId: string, input: ProcessReturnInput) {
+  return apiClient.post(`/sales/${saleId}/return`, input).then((res) => res.data);
 }
