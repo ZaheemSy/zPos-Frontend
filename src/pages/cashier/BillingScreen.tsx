@@ -417,7 +417,7 @@ export default function BillingScreen() {
                 className="w-20 rounded border border-surface-400 bg-surface-100 px-1.5 py-0.5 text-right text-xs text-zinc-100"
               />
             </div>
-            <div className="flex justify-between border-t border-surface-300 pt-2 text-base font-semibold text-white">
+            <div className="flex justify-between border-t border-surface-300 pt-2 text-base font-semibold text-zinc-100">
               <span>Total</span>
               <span>₹{total.toFixed(2)}</span>
             </div>

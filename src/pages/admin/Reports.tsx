@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Tooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { AlertTriangle, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { useThemeStore } from '../../store/theme.store';
 import { listBranches } from '../../api/branches.api';
 import type { Branch } from '../../api/branches.api';
 import {
@@ -25,7 +26,14 @@ import Input from '../../components/ui/Input';
 import Badge from '../../components/ui/Badge';
 import { Table, THead, TBody, Tr, Th, Td } from '../../components/ui/Table';
 
+const CHART_COLORS = {
+  light: { grid: '#e0e3ea', axis: '#52525b', tooltipBg: '#ffffff', tooltipBorder: '#e0e3ea', tooltipLabel: '#27272a' },
+  dark: { grid: '#24242e', axis: '#71717a', tooltipBg: '#131319', tooltipBorder: '#24242e', tooltipLabel: '#e4e4e7' },
+};
+
 export default function Reports() {
+  const theme = useThemeStore((s) => s.theme);
+  const chartColors = CHART_COLORS[theme];
   const [branches, setBranches] = useState<Branch[]>([]);
   const [branchId, setBranchId] = useState('');
   const [from, setFrom] = useState('');
@@ -106,12 +114,17 @@ export default function Reports() {
               {sales.byDay.length > 0 && (
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={sales.byDay}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#24242e" />
-                    <XAxis dataKey="date" stroke="#71717a" fontSize={12} />
-                    <YAxis stroke="#71717a" fontSize={12} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
+                    <XAxis dataKey="date" stroke={chartColors.axis} fontSize={12} />
+                    <YAxis stroke={chartColors.axis} fontSize={12} />
                     <Tooltip
-                      contentStyle={{ background: '#131319', border: '1px solid #24242e', borderRadius: 8, fontSize: 13 }}
-                      labelStyle={{ color: '#e4e4e7' }}
+                      contentStyle={{
+                        background: chartColors.tooltipBg,
+                        border: `1px solid ${chartColors.tooltipBorder}`,
+                        borderRadius: 8,
+                        fontSize: 13,
+                      }}
+                      labelStyle={{ color: chartColors.tooltipLabel }}
                     />
                     <Bar dataKey="revenue" fill="#6366f1" name="Revenue (₹)" radius={[4, 4, 0, 0]} />
                   </BarChart>

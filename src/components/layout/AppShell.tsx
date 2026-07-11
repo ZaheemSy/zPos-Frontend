@@ -2,8 +2,9 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
-import { LogOut, Menu, X, ShieldCheck, UserRound } from 'lucide-react';
+import { LogOut, Menu, X, ShieldCheck, UserRound, Sun, Moon } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
+import { useThemeStore } from '../../store/theme.store';
 import { logout } from '../../api/auth.api';
 
 export interface NavItem {
@@ -17,6 +18,8 @@ export default function AppShell({ navItems, homePath }: { navItems: NavItem[]; 
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const clearSession = useAuthStore((s) => s.clearSession);
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   async function handleLogout() {
@@ -37,7 +40,7 @@ export default function AppShell({ navItems, homePath }: { navItems: NavItem[]; 
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
           Ze
         </div>
-        <span className="text-lg font-semibold tracking-tight text-white">Zepos</span>
+        <span className="text-lg font-semibold tracking-tight text-zinc-100">Zepos</span>
       </div>
 
       <nav className="mt-6 flex flex-1 flex-col gap-1">
@@ -66,6 +69,13 @@ export default function AppShell({ navItems, homePath }: { navItems: NavItem[]; 
           </div>
         </div>
         <button
+          onClick={toggleTheme}
+          className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-surface-200 hover:text-zinc-100"
+        >
+          {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          {theme === 'light' ? 'Dark mode' : 'Light mode'}
+        </button>
+        <button
           onClick={handleLogout}
           className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-surface-200 hover:text-red-400"
         >
@@ -84,11 +94,16 @@ export default function AppShell({ navItems, homePath }: { navItems: NavItem[]; 
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-xs font-bold text-white">
             Ze
           </div>
-          <span className="font-semibold text-white">Zepos</span>
+          <span className="font-semibold text-zinc-100">Zepos</span>
         </NavLink>
-        <button onClick={() => setMobileOpen((v) => !v)} className="text-zinc-300">
-          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={toggleTheme} className="text-zinc-300" aria-label="Toggle theme">
+            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+          </button>
+          <button onClick={() => setMobileOpen((v) => !v)} className="text-zinc-300">
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
 
       {mobileOpen && (

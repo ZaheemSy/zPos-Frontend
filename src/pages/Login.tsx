@@ -43,7 +43,7 @@ export default function Login() {
             Ze
           </div>
           <div className="text-center">
-            <h1 className="text-xl font-semibold text-white">Sign in to Zepos</h1>
+            <h1 className="text-xl font-semibold text-zinc-100">Sign in to Zepos</h1>
             <p className="mt-1 text-sm text-zinc-500">Branch billing &amp; inventory, made simple</p>
           </div>
         </div>

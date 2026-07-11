@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { useThemeStore } from './store/theme.store';
 import Login from './pages/Login';
 import Dashboard from './pages/admin/Dashboard';
 import Products from './pages/admin/Products';
@@ -23,6 +25,12 @@ import CashierLayout from './components/layout/CashierLayout';
 import SuperAdminLayout from './components/layout/SuperAdminLayout';
 
 function App() {
+  const theme = useThemeStore((s) => s.theme);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
   return (
     <BrowserRouter>
       <ConnectivityBanner />

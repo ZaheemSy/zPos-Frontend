@@ -59,7 +59,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-xs font-medium text-zinc-500">Total Revenue</p>
-              <p className="text-xl font-semibold text-white">₹{revenue?.toFixed(2)}</p>
+              <p className="text-xl font-semibold text-zinc-100">₹{revenue?.toFixed(2)}</p>
             </div>
           </Card>
 
@@ -69,7 +69,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-xs font-medium text-zinc-500">Low Stock Items</p>
-              <p className="text-xl font-semibold text-white">{lowStockCount}</p>
+              <p className="text-xl font-semibold text-zinc-100">{lowStockCount}</p>
             </div>
           </Card>
 
@@ -79,7 +79,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-xs font-medium text-zinc-500">Outstanding Dues</p>
-              <p className="text-xl font-semibold text-white">₹{outstanding?.toFixed(2)}</p>
+              <p className="text-xl font-semibold text-zinc-100">₹{outstanding?.toFixed(2)}</p>
             </div>
           </Card>
         </div>

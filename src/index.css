@@ -15,6 +15,33 @@
   --color-brand-800: #3730a3;
   --color-brand-900: #312e81;
 
+  /* Light theme (default) values, overridden by [data-theme="dark"] below.
+     Components reference these via ordinary Tailwind text/bg/border color
+     classes, so switching the attribute repaints the whole app with no
+     per-component changes. */
+  --color-zinc-100: #18181b;
+  --color-zinc-200: #27272a;
+  --color-zinc-300: #3f3f46;
+  --color-zinc-400: #52525b;
+  --color-zinc-500: #71717a;
+  --color-zinc-600: #a1a1aa;
+
+  --color-surface-0: #f5f6fa;
+  --color-surface-50: #eef0f5;
+  --color-surface-100: #ffffff;
+  --color-surface-200: #eef0f5;
+  --color-surface-300: #e0e3ea;
+  --color-surface-400: #cbd0d9;
+}
+
+[data-theme='dark'] {
+  --color-zinc-100: #f4f4f5;
+  --color-zinc-200: #e4e4e7;
+  --color-zinc-300: #d4d4d8;
+  --color-zinc-400: #a1a1aa;
+  --color-zinc-500: #71717a;
+  --color-zinc-600: #52525b;
+
   --color-surface-0: #08080c;
   --color-surface-50: #0d0d13;
   --color-surface-100: #131319;
@@ -24,13 +51,17 @@
 }
 
 html {
+  color-scheme: light;
+}
+
+html[data-theme='dark'] {
   color-scheme: dark;
 }
 
 body {
   margin: 0;
   background: var(--color-surface-0);
-  color: #e4e4e7;
+  color: var(--color-zinc-200);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
