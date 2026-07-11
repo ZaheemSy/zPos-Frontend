@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Printer, Save, Building2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Printer, Save, Building2, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
 import { useAuthStore } from '../store/auth.store';
 import { listBranches, updateBranch } from '../api/branches.api';
 import type { Branch } from '../api/branches.api';
 import { listSettings, upsertSetting } from '../api/settings.api';
+import { changePassword } from '../api/auth.api';
 import { getErrorMessage } from '../utils/errorMessage';
 import PageHeader from '../components/ui/PageHeader';
 import Card from '../components/ui/Card';
@@ -25,6 +26,12 @@ export default function Settings() {
   const [branch, setBranch] = useState<Branch | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [pwSubmitting, setPwSubmitting] = useState(false);
+  const [pwMessage, setPwMessage] = useState<string | null>(null);
+  const [pwError, setPwError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAdmin) {
@@ -85,6 +92,23 @@ export default function Settings() {
     }
   }
 
+  async function handleChangePassword(e: FormEvent) {
+    e.preventDefault();
+    setPwError(null);
+    setPwMessage(null);
+    setPwSubmitting(true);
+    try {
+      await changePassword(currentPassword, newPassword);
+      setPwMessage('Password updated.');
+      setCurrentPassword('');
+      setNewPassword('');
+    } catch (err) {
+      setPwError(getErrorMessage(err, 'Failed to change password'));
+    } finally {
+      setPwSubmitting(false);
+    }
+  }
+
   return (
     <div>
       <PageHeader
@@ -132,6 +156,45 @@ export default function Settings() {
               </option>
             ))}
           </Select>
+        </Card>
+
+        <Card>
+          <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-200">
+            <KeyRound size={16} className="text-brand-400" />
+            Security
+          </h2>
+          {(pwMessage || pwError) && (
+            <div
+              className={`mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
+                pwError ? 'bg-red-500/10 text-red-400' : 'bg-emerald-500/10 text-emerald-400'
+              }`}
+            >
+              {pwError ? <AlertCircle size={15} /> : <CheckCircle2 size={15} />}
+              {pwError ?? pwMessage}
+            </div>
+          )}
+          <form onSubmit={handleChangePassword} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              label="Current password"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              required
+            />
+            <Input
+              label="New password"
+              type="password"
+              minLength={6}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+            />
+            <div className="sm:col-span-2">
+              <Button type="submit" disabled={pwSubmitting} icon={<Save size={16} />}>
+                {pwSubmitting ? 'Saving...' : 'Change password'}
+              </Button>
+            </div>
+          </form>
         </Card>
 
         {isAdmin && (

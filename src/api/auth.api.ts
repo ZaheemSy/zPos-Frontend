@@ -13,3 +13,7 @@ export function login(email: string, password: string) {
 export function logout() {
   return apiClient.post('/auth/logout');
 }
+
+export function changePassword(currentPassword: string, newPassword: string) {
+  return apiClient.post('/auth/change-password', { currentPassword, newPassword });
+}

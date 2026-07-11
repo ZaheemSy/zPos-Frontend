@@ -10,7 +10,8 @@ export default function ProtectedRoute({ allowedRoles }: { allowedRoles: Role[] 
   }
 
   if (!allowedRoles.includes(user.role)) {
-    return <Navigate to={user.role === 'admin' ? '/admin' : '/cashier'} replace />;
+    const home = user.role === 'super_admin' ? '/super-admin' : user.role === 'admin' ? '/admin' : '/cashier';
+    return <Navigate to={home} replace />;
   }
 
   return <Outlet />;

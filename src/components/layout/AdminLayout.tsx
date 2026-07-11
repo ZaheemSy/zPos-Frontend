@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Tag,
   Users,
+  UserCog,
   BarChart3,
   Settings as SettingsIcon,
 } from 'lucide-react';
@@ -20,6 +21,7 @@ const navItems: NavItem[] = [
   { to: '/admin/purchase-orders', label: 'Purchase Orders', icon: <ClipboardList size={18} /> },
   { to: '/admin/coupons', label: 'Coupons', icon: <Tag size={18} /> },
   { to: '/admin/customers', label: 'Customers', icon: <Users size={18} /> },
+  { to: '/admin/cashiers', label: 'Cashiers', icon: <UserCog size={18} /> },
   { to: '/admin/reports', label: 'Reports', icon: <BarChart3 size={18} /> },
   { to: '/admin/settings', label: 'Settings', icon: <SettingsIcon size={18} /> },
 ];

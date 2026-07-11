@@ -25,7 +25,7 @@ export default function Login() {
     try {
       const { accessToken, user } = await login(email, password);
       setSession(accessToken, user);
-      navigate(user.role === 'admin' ? '/admin' : '/cashier');
+      navigate(user.role === 'super_admin' ? '/super-admin' : user.role === 'admin' ? '/admin' : '/cashier');
     } catch (err) {
       setError(getErrorMessage(err, 'Invalid email or password'));
     } finally {

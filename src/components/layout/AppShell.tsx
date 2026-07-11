@@ -62,7 +62,7 @@ export default function AppShell({ navItems, homePath }: { navItems: NavItem[]; 
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate font-medium text-zinc-100">{user?.name}</p>
-            <p className="truncate text-xs capitalize text-zinc-500">{user?.role}</p>
+            <p className="truncate text-xs capitalize text-zinc-500">{user?.role?.replace('_', ' ')}</p>
           </div>
         </div>
         <button
