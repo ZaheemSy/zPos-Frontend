@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import type { ImportPreviewResult } from './import.types';
 
 export interface Customer {
   id: string;
@@ -42,4 +43,29 @@ export function deleteCustomer(id: string) {
 
 export function getCustomerHistory(id: string) {
   return apiClient.get<CustomerHistory>(`/customers/${id}/history`).then((res) => res.data);
+}
+
+export interface CustomerImportRow {
+  name: string;
+  phone: string;
+  email: string;
+  billingAddress: string;
+  gstin: string;
+  [key: string]: string | number;
+}
+
+export function downloadCustomerImportTemplate() {
+  return apiClient.get('/customers/import-template', { responseType: 'blob' }).then((res) => res.data as Blob);
+}
+
+export function validateCustomerImport(file: File) {
+  const form = new FormData();
+  form.append('file', file);
+  return apiClient
+    .post<ImportPreviewResult<CustomerImportRow>>('/customers/import/validate', form)
+    .then((res) => res.data);
+}
+
+export function commitCustomerImport(rows: CreateCustomerInput[]) {
+  return apiClient.post<{ created: number }>('/customers/import/commit', { rows }).then((res) => res.data);
 }

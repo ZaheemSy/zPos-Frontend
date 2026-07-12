@@ -1,8 +1,17 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Plus, PackagePlus, Pencil, Trash2, Check, X } from 'lucide-react';
-import { addVariant, createProduct, deleteProduct, listProducts, updateProduct } from '../../api/products.api';
-import type { Product } from '../../api/products.api';
+import {
+  addVariant,
+  commitProductImport,
+  createProduct,
+  deleteProduct,
+  downloadProductImportTemplate,
+  listProducts,
+  updateProduct,
+  validateProductImport,
+} from '../../api/products.api';
+import type { Product, ProductImportRow } from '../../api/products.api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { getErrorMessage } from '../../utils/errorMessage';
 import PageHeader from '../../components/ui/PageHeader';
@@ -12,8 +21,34 @@ import Select from '../../components/ui/Select';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import { Table, THead, TBody, Tr, Th, Td } from '../../components/ui/Table';
+import ImportPanel from '../../components/ImportPanel';
+import type { ImportColumn } from '../../components/ImportPanel';
 
 const TAX_RATES = [0, 5, 12, 18, 28];
+
+const PRODUCT_IMPORT_COLUMNS: ImportColumn<ProductImportRow>[] = [
+  { key: 'name', label: 'Name' },
+  { key: 'hsnCode', label: 'HSN Code' },
+  { key: 'unit', label: 'Unit' },
+  { key: 'taxPercent', label: 'Tax %', type: 'number' },
+  { key: 'cessPercent', label: 'Cess %', type: 'number' },
+  { key: 'description', label: 'Description' },
+];
+
+function validateProductRow(data: ProductImportRow): string | undefined {
+  if (!String(data.name ?? '').trim()) return 'Name is required';
+  if (!String(data.hsnCode ?? '').trim()) return 'HSN code is required';
+  if (!String(data.unit ?? '').trim()) return 'Unit is required';
+  const tax = Number(data.taxPercent);
+  if (data.taxPercent === '' || Number.isNaN(tax) || tax < 0 || tax > 100) {
+    return 'Tax % must be a number between 0 and 100';
+  }
+  const cess = Number(data.cessPercent);
+  if (data.cessPercent !== 0 && data.cessPercent !== undefined && (Number.isNaN(cess) || cess < 0 || cess > 100)) {
+    return 'Cess % must be a number between 0 and 100';
+  }
+  return undefined;
+}
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -111,9 +146,33 @@ export default function Products() {
     }
   }
 
+  async function handleCommitImport(rows: ProductImportRow[]) {
+    return commitProductImport(
+      rows.map((r) => ({
+        name: String(r.name),
+        hsnCode: String(r.hsnCode),
+        unit: String(r.unit),
+        taxPercent: Number(r.taxPercent),
+        cessPercent: Number(r.cessPercent) || 0,
+        description: r.description ? String(r.description) : undefined,
+      })),
+    );
+  }
+
   return (
     <div>
       <PageHeader title="Products" description="Manage your product catalog, HSN codes, and tax rates." />
+
+      <ImportPanel
+        title="Import products from Excel/CSV"
+        columns={PRODUCT_IMPORT_COLUMNS}
+        templateFilename="zepos-products-template.xlsx"
+        onDownloadTemplate={downloadProductImportTemplate}
+        onValidateFile={validateProductImport}
+        onCommit={handleCommitImport}
+        validateRow={validateProductRow}
+        onImported={refresh}
+      />
 
       <Card className="mb-6">
         <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-200">

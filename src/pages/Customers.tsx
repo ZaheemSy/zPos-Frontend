@@ -1,17 +1,48 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent, MouseEvent } from 'react';
 import { Search, Plus, UserPlus, ChevronDown, ChevronRight, Coins, Pencil, Trash2, Check, X } from 'lucide-react';
-import { createCustomer, deleteCustomer, getCustomerHistory, listCustomers, updateCustomer } from '../api/customers.api';
-import type { Customer, CustomerHistory } from '../api/customers.api';
+import {
+  commitCustomerImport,
+  createCustomer,
+  deleteCustomer,
+  downloadCustomerImportTemplate,
+  getCustomerHistory,
+  listCustomers,
+  updateCustomer,
+  validateCustomerImport,
+} from '../api/customers.api';
+import type { Customer, CustomerHistory, CustomerImportRow } from '../api/customers.api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { getErrorMessage } from '../utils/errorMessage';
+import { useAuthStore } from '../store/auth.store';
 import PageHeader from '../components/ui/PageHeader';
 import Card from '../components/ui/Card';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
+import ImportPanel from '../components/ImportPanel';
+import type { ImportColumn } from '../components/ImportPanel';
+
+const CUSTOMER_IMPORT_COLUMNS: ImportColumn<CustomerImportRow>[] = [
+  { key: 'name', label: 'Name' },
+  { key: 'phone', label: 'Phone' },
+  { key: 'email', label: 'Email' },
+  { key: 'billingAddress', label: 'Billing Address' },
+  { key: 'gstin', label: 'GSTIN' },
+];
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateCustomerRow(data: CustomerImportRow): string | undefined {
+  if (!String(data.name ?? '').trim()) return 'Name is required';
+  const email = String(data.email ?? '').trim();
+  if (email && !EMAIL_RE.test(email)) return `"${email}" doesn't look like a valid email`;
+  return undefined;
+}
 
 export default function Customers() {
+  const role = useAuthStore((s) => s.user?.role);
+  const isAdmin = role === 'admin';
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -110,9 +141,34 @@ export default function Customers() {
     }
   }
 
+  async function handleCommitImport(rows: CustomerImportRow[]) {
+    return commitCustomerImport(
+      rows.map((r) => ({
+        name: String(r.name),
+        phone: r.phone ? String(r.phone) : undefined,
+        email: r.email ? String(r.email) : undefined,
+        billingAddress: r.billingAddress ? String(r.billingAddress) : undefined,
+        gstin: r.gstin ? String(r.gstin) : undefined,
+      })),
+    );
+  }
+
   return (
     <div>
       <PageHeader title="Customers" description="Search, add, and view loyalty & purchase history." />
+
+      {isAdmin && (
+        <ImportPanel
+          title="Import customers from Excel/CSV"
+          columns={CUSTOMER_IMPORT_COLUMNS}
+          templateFilename="zepos-customers-template.xlsx"
+          onDownloadTemplate={downloadCustomerImportTemplate}
+          onValidateFile={validateCustomerImport}
+          onCommit={handleCommitImport}
+          validateRow={validateCustomerRow}
+          onImported={() => refresh(search || undefined)}
+        />
+      )}
 
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.4fr]">
         <Card>
