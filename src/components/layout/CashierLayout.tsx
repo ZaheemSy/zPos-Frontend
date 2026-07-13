@@ -1,4 +1,4 @@
-import { Receipt, Users, PauseCircle, Undo2, Settings as SettingsIcon } from 'lucide-react';
+import { Receipt, Users, PauseCircle, Undo2, History, Settings as SettingsIcon } from 'lucide-react';
 import AppShell from './AppShell';
 import type { NavItem } from './AppShell';
 
@@ -7,6 +7,7 @@ const navItems: NavItem[] = [
   { to: '/cashier/customers', label: 'Customers', icon: <Users size={18} /> },
   { to: '/cashier/held-sales', label: 'Held Sales', icon: <PauseCircle size={18} /> },
   { to: '/cashier/returns', label: 'Returns', icon: <Undo2 size={18} /> },
+  { to: '/cashier/history', label: 'History', icon: <History size={18} /> },
   { to: '/cashier/settings', label: 'Settings', icon: <SettingsIcon size={18} /> },
 ];
 

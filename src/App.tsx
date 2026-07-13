@@ -13,6 +13,7 @@ import Reports from './pages/admin/Reports';
 import BillingScreen from './pages/cashier/BillingScreen';
 import HoldSales from './pages/cashier/HoldSales';
 import Returns from './pages/cashier/Returns';
+import History from './pages/cashier/History';
 import Customers from './pages/Customers';
 import Settings from './pages/Settings';
 import InvoiceView from './pages/InvoiceView';
@@ -59,6 +60,7 @@ function App() {
             <Route path="/cashier/customers" element={<Customers />} />
             <Route path="/cashier/held-sales" element={<HoldSales />} />
             <Route path="/cashier/returns" element={<Returns />} />
+            <Route path="/cashier/history" element={<History />} />
             <Route path="/cashier/settings" element={<Settings />} />
           </Route>
         </Route>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Search,
   X,
@@ -56,9 +56,18 @@ export default function BillingScreen() {
   const [error, setError] = useState<string | null>(null);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
 
+  const cartListRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     listInventory().then(setInventory);
   }, []);
+
+  useEffect(() => {
+    const el = cartListRef.current;
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    }
+  }, [cart.items.length]);
 
   const searchResults = useMemo(() => {
     if (!productSearch.trim()) return [];
@@ -301,7 +310,7 @@ export default function BillingScreen() {
             IGST (inter-state sale)
           </label>
 
-          <div className="mt-4 flex max-h-64 flex-col gap-2 overflow-y-auto">
+          <div ref={cartListRef} className="mt-4 flex max-h-64 flex-col gap-2 overflow-y-auto">
             {cart.items.length === 0 && (
               <p className="py-6 text-center text-sm text-zinc-500">Cart is empty — search a product to add it.</p>
             )}

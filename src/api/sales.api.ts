@@ -91,6 +91,10 @@ export function findSalesByInvoiceNumber(invoiceNumber: string) {
   return apiClient.get<Sale[]>('/sales', { params: { invoiceNumber } }).then((res) => res.data);
 }
 
+export function listSales() {
+  return apiClient.get<Sale[]>('/sales').then((res) => res.data);
+}
+
 export interface ReturnItemInput {
   saleItemId: string;
   quantityReturned: number;
