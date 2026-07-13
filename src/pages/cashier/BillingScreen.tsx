@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useReactToPrint } from 'react-to-print';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Search,
   X,
@@ -26,13 +25,9 @@ import type { Customer } from '../../api/customers.api';
 import { createSale } from '../../api/sales.api';
 import type { PaymentInput, Sale } from '../../api/sales.api';
 import { calculateLineItem } from '../../utils/gst.utils';
-import Invoice from '../../print-templates/Invoice';
-import type { InvoiceFormat } from '../../print-templates/Invoice';
-import { listSettings } from '../../api/settings.api';
 import { getErrorMessage } from '../../utils/errorMessage';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import Select from '../../components/ui/Select';
 import Card from '../../components/ui/Card';
 
 const PAYMENT_MODES = [
@@ -60,27 +55,9 @@ export default function BillingScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
-  const [printFormat, setPrintFormat] = useState<InvoiceFormat>('A4');
-  const [footerNote, setFooterNote] = useState<string | undefined>();
-  const [declarationText, setDeclarationText] = useState<string | undefined>();
-
-  const printRef = useRef<HTMLDivElement>(null);
-  const handlePrint = useReactToPrint({
-    contentRef: printRef,
-    documentTitle: lastSale?.invoiceNumber ?? 'invoice',
-  });
 
   useEffect(() => {
     listInventory().then(setInventory);
-    listSettings().then((rows) => {
-      const map: Record<string, string> = {};
-      rows.forEach((r) => (map[r.key] = r.value));
-      if (map.printer_type === 'A4' || map.printer_type === 'A3' || map.printer_type === 'thermal') {
-        setPrintFormat(map.printer_type);
-      }
-      setFooterNote(map.footer_note);
-      setDeclarationText(map.declaration_text);
-    });
   }, []);
 
   const searchResults = useMemo(() => {
@@ -171,6 +148,9 @@ export default function BillingScreen() {
     if (cart.items.length === 0) return;
     setError(null);
     setSubmitting(true);
+    // Open the tab synchronously (still inside the click's call stack) so
+    // browsers don't treat it as a blocked popup once the sale finishes.
+    const invoiceTab = window.open('', '_blank');
     try {
       const sale = await createSale({
         customerId: cart.customerId ?? undefined,
@@ -186,8 +166,12 @@ export default function BillingScreen() {
       });
       setLastSale(sale);
       resetAfterSale();
+      if (invoiceTab) {
+        invoiceTab.location.href = `/invoice/${sale.id}`;
+      }
     } catch (err) {
       setError(getErrorMessage(err, 'Failed to complete sale. Check stock levels and payment amounts.'));
+      invoiceTab?.close();
     } finally {
       setSubmitting(false);
     }
@@ -477,16 +461,17 @@ export default function BillingScreen() {
                 <CheckCircle2 size={16} />
                 Sale completed: {lastSale.invoiceNumber}
               </p>
-              <div className="mt-2 flex gap-2">
-                <Select value={printFormat} onChange={(e) => setPrintFormat(e.target.value as InvoiceFormat)} className="!py-1.5">
-                  <option value="A4">A4</option>
-                  <option value="A3">A3</option>
-                  <option value="thermal">Thermal</option>
-                </Select>
-                <Button type="button" size="sm" variant="secondary" icon={<Printer size={14} />} onClick={() => handlePrint()}>
-                  Print
-                </Button>
-              </div>
+              <p className="mt-1 text-xs text-emerald-400/80">Invoice opened in a new tab.</p>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                icon={<Printer size={14} />}
+                className="mt-2"
+                onClick={() => window.open(`/invoice/${lastSale.id}`, '_blank')}
+              >
+                Open invoice again
+              </Button>
             </div>
           )}
 
@@ -509,14 +494,6 @@ export default function BillingScreen() {
           </div>
         </Card>
       </div>
-
-      {lastSale && (
-        <div className="max-h-[600px] overflow-auto rounded-xl border border-surface-300 lg:col-span-2">
-          <div ref={printRef}>
-            <Invoice sale={lastSale} format={printFormat} footerNote={footerNote} declarationText={declarationText} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

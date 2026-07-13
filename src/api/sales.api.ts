@@ -75,6 +75,10 @@ export function createSale(input: CreateSaleInput) {
   return apiClient.post<Sale>('/sales', input).then((res) => res.data);
 }
 
+export function getSale(id: string) {
+  return apiClient.get<Sale>(`/sales/${id}`).then((res) => res.data);
+}
+
 export function listHeldSales() {
   return apiClient.get<Sale[]>('/sales', { params: { status: 'held' } }).then((res) => res.data);
 }

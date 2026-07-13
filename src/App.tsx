@@ -15,6 +15,7 @@ import HoldSales from './pages/cashier/HoldSales';
 import Returns from './pages/cashier/Returns';
 import Customers from './pages/Customers';
 import Settings from './pages/Settings';
+import InvoiceView from './pages/InvoiceView';
 import SuperAdminDashboard from './pages/superadmin/Dashboard';
 import CreateCompany from './pages/superadmin/CreateCompany';
 import CompanyDetail from './pages/superadmin/CompanyDetail';
@@ -60,6 +61,10 @@ function App() {
             <Route path="/cashier/returns" element={<Returns />} />
             <Route path="/cashier/settings" element={<Settings />} />
           </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['admin', 'cashier']} />}>
+          <Route path="/invoice/:saleId" element={<InvoiceView />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
