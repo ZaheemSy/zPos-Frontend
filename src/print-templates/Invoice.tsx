@@ -135,7 +135,7 @@ export default function Invoice({
         {!isThermal && (
           <div style={{ maxWidth: '50%' }}>
             <strong>Amount in words:</strong>
-            <div>Rupees {amountInWords(Number(sale.total))} Only</div>
+            <div>{amountInWords(Number(sale.total))} Rupees Only</div>
           </div>
         )}
         <div style={{ textAlign: 'right', minWidth: isThermal ? '100%' : 220 }}>
